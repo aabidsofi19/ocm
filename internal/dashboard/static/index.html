@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OCM Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <header class="top">
+      <div class="brand">
+        <div class="mark">OCM</div>
+        <div class="meta">
+          <div class="title">Operational Complexity Meter</div>
+          <div class="sub">MVP: CSA + Dependency Depth</div>
+        </div>
+      </div>
+      <div class="controls">
+        <label class="field">
+          <span>Service</span>
+          <select id="serviceSelect"></select>
+        </label>
+        <button id="refreshBtn" class="btn">Refresh</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card" id="statusCard">
+        <div class="cardTitle">Status</div>
+        <div class="statusRow">
+          <div class="pill" id="apiPill">API: unknown</div>
+          <div class="pill" id="dbPill">DB: loaded</div>
+        </div>
+        <div class="small" id="note">If you see no services, run analysis again or point `--repo` at a folder with Kubernetes YAML.</div>
+      </section>
+
+      <section class="card" id="breakdownCard">
+        <div class="cardTitle">Current Breakdown</div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpiLabel">CSA (latest)</div>
+            <div class="kpiValue" id="csaValue">-</div>
+            <div class="kpiHint">Configuration surface area</div>
+          </div>
+          <div class="kpi">
+            <div class="kpiLabel">DD (latest)</div>
+            <div class="kpiValue" id="ddValue">-</div>
+            <div class="kpiHint">Dependency depth</div>
+          </div>
+          <div class="kpi">
+            <div class="kpiLabel">OCM (latest)</div>
+            <div class="kpiValue" id="ocmValue">-</div>
+            <div class="kpiHint">0..1 normalized score</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="trendCard">
+        <div class="cardTitle">OCM Trend</div>
+        <div class="row">
+          <div class="small">Composite score (0..1), one point per analysis run.</div>
+          <div class="small mono" id="latestAt"></div>
+        </div>
+        <canvas id="trend" width="900" height="240"></canvas>
+        <div class="small">Tip: run again to append a new timepoint.</div>
+      </section>
+
+      <section class="card" id="metricsCard">
+        <div class="cardTitle">Metrics Explained</div>
+        <details open>
+          <summary>CSA — Configuration Surface Area</summary>
+          <div class="detailBody">
+            <p><span class="kw">Spec definition</span>: count of configurable parameters + environment variables + resource specifications + replica configurations.</p>
+            <p><span class="kw">This POC extracts</span> (from Kubernetes YAML): container env entries, container ports, leaf keys under <code>resources</code>, presence of <code>spec.replicas</code>, plus a heuristic count of top-level keys under <code>spec</code>.</p>
+          </div>
+        </details>
+        <details>
+          <summary>DD — Dependency Depth</summary>
+          <div class="detailBody">
+            <p><span class="kw">Spec definition</span>: longest path length (edge count) in the service dependency graph, where A → B means “A depends on B”.</p>
+            <p><span class="kw">This POC infers edges</span> from env vars whose names end with <code>_SERVICE</code> or <code>_SERVICE_HOST</code> and whose values look like a service hostname.</p>
+            <p><span class="kw">Cycles</span> are handled deterministically by condensing strongly-connected components into a DAG and computing the longest path there.</p>
+          </div>
+        </details>
+        <details>
+          <summary>OCM — Composite Score</summary>
+          <div class="detailBody">
+            <p><span class="kw">Normalization</span>: per run cohort (all services in that run), <code>(M - min) / (max - min)</code>. If <code>max == min</code>, normalized value is <code>0</code>.</p>
+            <p><span class="kw">MVP weights</span>: <code>0.5</code> for CSA and <code>0.5</code> for DD. Missing metrics are treated as 0.</p>
+          </div>
+        </details>
+      </section>
+
+      <section class="card" id="rawCard">
+        <div class="cardTitle">Raw Series</div>
+        <pre id="raw" class="pre"></pre>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
