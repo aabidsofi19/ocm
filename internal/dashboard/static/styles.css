@@ -156,7 +156,7 @@ summary {
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 .kpi {
@@ -165,6 +165,8 @@ summary {
   background: rgba(255,255,255,0.05);
   padding: 12px;
 }
+.kpi.clickable { cursor: pointer; }
+.kpi.clickable:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.14); }
 .kpiLabel { font-size: 12px; color: var(--muted); }
 .kpiValue {
   font-family: var(--mono);
@@ -195,6 +197,42 @@ canvas {
 }
 
 .small { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+.modal { position: fixed; inset: 0; display: none; z-index: 50; }
+.modal[aria-hidden="false"] { display: grid; place-items: center; }
+.modalScrim { position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); }
+.modalPanel {
+  position: relative;
+  width: min(980px, calc(100vw - 28px));
+  max-height: min(80vh, 720px);
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: linear-gradient(180deg, rgba(18, 26, 36, 0.92), rgba(10, 15, 20, 0.88));
+  box-shadow: 0 40px 120px rgba(0,0,0,0.65);
+}
+.modalTop { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 14px; border-bottom: 1px solid rgba(255,255,255,0.10); }
+.modalTitle { font-family: var(--sans); font-weight: 650; letter-spacing: -0.01em; }
+.modalSub { margin-top: 2px; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.modalBody { padding: 14px; overflow: auto; }
+
+.tableWrap { margin-top: 10px; border: 1px solid rgba(255,255,255,0.10); border-radius: 14px; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+.table thead th {
+  text-align: left;
+  padding: 10px 10px;
+  color: rgba(255,255,255,0.70);
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.table tbody td {
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.84);
+  vertical-align: top;
+  word-break: break-word;
+}
+.table tbody tr:hover td { background: rgba(255,255,255,0.03); }
 
 @media (max-width: 960px) {
   .grid { grid-template-columns: 1fr; }

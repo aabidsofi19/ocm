@@ -16,7 +16,7 @@
         <div class="mark">OCM</div>
         <div class="meta">
           <div class="title">Operational Complexity Meter</div>
-          <div class="sub">MVP: CSA + Dependency Depth</div>
+          <div class="sub">POC: CSA only</div>
         </div>
       </div>
       <div class="controls">
@@ -39,34 +39,29 @@
       </section>
 
       <section class="card" id="breakdownCard">
-        <div class="cardTitle">Current Breakdown</div>
+        <div class="cardTitle">Current Snapshot</div>
         <div class="kpis">
           <div class="kpi">
+            <div class="kpiLabel">Repo CSA (latest sum)</div>
+            <div class="kpiValue" id="repoCsaValue">-</div>
+            <div class="kpiHint" id="repoCsaHint">Sum of latest CSA across services</div>
+          </div>
+          <div class="kpi">
+            <div class="kpiLabel">Repo OCM (latest avg)</div>
+            <div class="kpiValue" id="repoOcmValue">-</div>
+            <div class="kpiHint" id="repoOcmHint">Average of latest OCM across services</div>
+          </div>
+          <div class="kpi clickable" id="csaTile" title="Click to view evidence">
             <div class="kpiLabel">CSA (latest)</div>
             <div class="kpiValue" id="csaValue">-</div>
             <div class="kpiHint">Configuration surface area</div>
           </div>
           <div class="kpi">
-            <div class="kpiLabel">DD (latest)</div>
-            <div class="kpiValue" id="ddValue">-</div>
-            <div class="kpiHint">Dependency depth</div>
-          </div>
-          <div class="kpi">
             <div class="kpiLabel">OCM (latest)</div>
             <div class="kpiValue" id="ocmValue">-</div>
-            <div class="kpiHint">0..1 normalized score</div>
+            <div class="kpiHint">Composite score (0..1)</div>
           </div>
         </div>
-      </section>
-
-      <section class="card" id="trendCard">
-        <div class="cardTitle">OCM Trend</div>
-        <div class="row">
-          <div class="small">Composite score (0..1), one point per analysis run.</div>
-          <div class="small mono" id="latestAt"></div>
-        </div>
-        <canvas id="trend" width="900" height="240"></canvas>
-        <div class="small">Tip: run again to append a new timepoint.</div>
       </section>
 
       <section class="card" id="metricsCard">
@@ -76,30 +71,53 @@
           <div class="detailBody">
             <p><span class="kw">Spec definition</span>: count of configurable parameters + environment variables + resource specifications + replica configurations.</p>
             <p><span class="kw">This POC extracts</span> (from Kubernetes YAML): container env entries, container ports, leaf keys under <code>resources</code>, presence of <code>spec.replicas</code>, plus a heuristic count of top-level keys under <code>spec</code>.</p>
-          </div>
-        </details>
-        <details>
-          <summary>DD — Dependency Depth</summary>
-          <div class="detailBody">
-            <p><span class="kw">Spec definition</span>: longest path length (edge count) in the service dependency graph, where A → B means “A depends on B”.</p>
-            <p><span class="kw">This POC infers edges</span> from env vars whose names end with <code>_SERVICE</code> or <code>_SERVICE_HOST</code> and whose values look like a service hostname.</p>
-            <p><span class="kw">Cycles</span> are handled deterministically by condensing strongly-connected components into a DAG and computing the longest path there.</p>
+            <p><span class="kw">Evidence</span>: click the CSA tile to see the individual items that contributed to the latest CSA.</p>
           </div>
         </details>
         <details>
           <summary>OCM — Composite Score</summary>
           <div class="detailBody">
-            <p><span class="kw">Normalization</span>: per run cohort (all services in that run), <code>(M - min) / (max - min)</code>. If <code>max == min</code>, normalized value is <code>0</code>.</p>
-            <p><span class="kw">MVP weights</span>: <code>0.5</code> for CSA and <code>0.5</code> for DD. Missing metrics are treated as 0.</p>
+            <p><span class="kw">Definition</span>: a weighted aggregate of normalized metrics. This POC stores the composite OCM score per service per run in SQLite.</p>
+            <p><span class="kw">Note</span>: the current UI does not show a trendline, only the latest OCM value (and a repo-level average).</p>
           </div>
         </details>
       </section>
 
       <section class="card" id="rawCard">
-        <div class="cardTitle">Raw Series</div>
+        <div class="cardTitle">Raw CSA Series</div>
         <pre id="raw" class="pre"></pre>
       </section>
     </main>
+
+    <div class="modal" id="modal" aria-hidden="true">
+      <div class="modalScrim" id="modalScrim"></div>
+      <div class="modalPanel" role="dialog" aria-modal="true" aria-label="Metric evidence">
+        <div class="modalTop">
+          <div>
+            <div class="modalTitle" id="modalTitle">Evidence</div>
+            <div class="modalSub" id="modalSub"></div>
+          </div>
+          <button class="btn" id="closeModalBtn">Close</button>
+        </div>
+        <div class="modalBody">
+          <div class="small" id="modalMeta"></div>
+          <div class="tableWrap">
+            <table class="table" id="evidenceTable">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Key</th>
+                  <th>Value</th>
+                  <th>Manifest</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="/app.js"></script>
   </body>

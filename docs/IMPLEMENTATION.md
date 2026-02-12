@@ -75,14 +75,17 @@ The architecture in `specs/00-overview.md` is implemented as:
    - `internal/api/api.go` exposes:
      - `GET /api/healthz`
      - `GET /api/services`
+     - `GET /api/overview` (repo-level CSA aggregate)
      - `GET /api/services/{id}/scores`
      - `GET /api/services/{id}/metrics/{CSA|DD}`
+     - `GET /api/services/{id}/metrics/{CSA|DD}/evidence` (latest run evidence)
 
 7) Dashboard (`specs/70-visualization-dashboard.md`)
    - `internal/dashboard/static/` is a no-build dashboard served by the Go binary.
    - Shows:
-     - a per-service OCM trend chart
-     - latest CSA/DD/OCM values
+     - repo-level CSA aggregate
+     - per-service latest CSA
+     - metric evidence modal on click
      - raw JSON panel for debugging
 
 ## Service Identification
@@ -100,3 +103,4 @@ This MVP supports a configurable strategy via `--service-key`:
 - Dependency extraction is heuristic and based on env-var naming.
 - Helm rendering, Dockerfile parsing, and Git change volatility are not implemented yet.
 - The analyzer currently runs once on startup; adding a "re-run analysis" API is a natural next step.
+- Evidence is currently persisted only for CSA (from Kubernetes YAML extraction).

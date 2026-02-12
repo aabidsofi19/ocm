@@ -44,6 +44,20 @@ func (s *Store) Migrate(ctx context.Context) error {
 			timestamp TEXT NOT NULL,
 			FOREIGN KEY(service_id) REFERENCES services(id)
 		);`,
+		`CREATE TABLE IF NOT EXISTS metric_evidence(
+			id INTEGER PRIMARY KEY,
+			service_id INTEGER NOT NULL,
+			metric_type TEXT NOT NULL,
+			component TEXT NOT NULL,
+			evidence_key TEXT,
+			evidence_value TEXT,
+			source_path TEXT NOT NULL,
+			manifest_kind TEXT,
+			manifest_name TEXT,
+			timestamp TEXT NOT NULL,
+			FOREIGN KEY(service_id) REFERENCES services(id)
+		);`,
+		`CREATE INDEX IF NOT EXISTS idx_evidence_service_metric_time ON metric_evidence(service_id, metric_type, timestamp);`,
 		`CREATE INDEX IF NOT EXISTS idx_metrics_service_time ON metrics(service_id, timestamp);`,
 		`CREATE INDEX IF NOT EXISTS idx_scores_service_time ON composite_scores(service_id, timestamp);`,
 	}
@@ -79,6 +93,25 @@ func (s *Store) SaveRun(ctx context.Context, in SaveRunInput) error {
 				return err
 			}
 		}
+		for mt, items := range svc.Evidence {
+			for _, ev := range items {
+				if _, err := tx.ExecContext(ctx,
+					`INSERT INTO metric_evidence(service_id, metric_type, component, evidence_key, evidence_value, source_path, manifest_kind, manifest_name, timestamp)
+					 VALUES(?,?,?,?,?,?,?,?,?)`,
+					serviceID,
+					string(mt),
+					ev.Component,
+					ev.Key,
+					ev.Value,
+					ev.SourcePath,
+					ev.ManifestKind,
+					ev.ManifestName,
+					in.RunAt.UTC().Format(time.RFC3339Nano),
+				); err != nil {
+					return err
+				}
+			}
+		}
 		if _, err := tx.ExecContext(ctx,
 			`INSERT INTO composite_scores(service_id, ocm_score, timestamp) VALUES(?,?,?)`,
 			serviceID, svc.Score, in.RunAt.UTC().Format(time.RFC3339Nano)); err != nil {
@@ -87,6 +120,51 @@ func (s *Store) SaveRun(ctx context.Context, in SaveRunInput) error {
 	}
 
 	return tx.Commit()
+}
+
+func (s *Store) ListEvidenceLatest(ctx context.Context, serviceID int64, metricType model.MetricType) ([]model.EvidenceItem, error) {
+	var latestTS sql.NullString
+	if err := s.db.QueryRowContext(ctx,
+		`SELECT MAX(timestamp) FROM metric_evidence WHERE service_id=? AND metric_type=?`,
+		serviceID, string(metricType)).Scan(&latestTS); err != nil {
+		return nil, err
+	}
+	if !latestTS.Valid || latestTS.String == "" {
+		return []model.EvidenceItem{}, nil
+	}
+
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT metric_type, component, evidence_key, evidence_value, source_path, manifest_kind, manifest_name
+		 FROM metric_evidence
+		 WHERE service_id=? AND metric_type=? AND timestamp=?
+		 ORDER BY id ASC`,
+		serviceID, string(metricType), latestTS.String)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []model.EvidenceItem
+	for rows.Next() {
+		var (
+			mt, comp      string
+			key, val, src sql.NullString
+			kind, name    sql.NullString
+		)
+		if err := rows.Scan(&mt, &comp, &key, &val, &src, &kind, &name); err != nil {
+			return nil, err
+		}
+		out = append(out, model.EvidenceItem{
+			MetricType:   model.MetricType(mt),
+			Component:    comp,
+			Key:          key.String,
+			Value:        val.String,
+			SourcePath:   src.String,
+			ManifestKind: kind.String,
+			ManifestName: name.String,
+		})
+	}
+	return out, rows.Err()
 }
 
 func upsertService(ctx context.Context, tx *sql.Tx, name, repo string) (int64, error) {

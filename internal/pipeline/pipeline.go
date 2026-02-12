@@ -94,12 +94,13 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 	var warnings []string
 
 	type svcAccum struct {
-		name  string
-		repo  string
-		csa   float64
-		deps  map[string]struct{}
-		srcs  int
-		parse int
+		name     string
+		repo     string
+		csa      float64
+		deps     map[string]struct{}
+		evidence []model.EvidenceItem
+		srcs     int
+		parse    int
 	}
 
 	byService := map[string]*svcAccum{}
@@ -161,7 +162,7 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 		serviceName := serviceNameFromPath(path)
 		acc := maybeAdd(serviceName)
 		acc.srcs++
-		facts, perr := parser.ParseK8sYAMLForFacts(b)
+		facts, perr := parser.ParseK8sYAMLForFacts(b, path)
 		if perr != nil {
 			warnings = append(warnings, fmt.Sprintf("parse warning: %s: %v", path, perr))
 			return nil
@@ -172,6 +173,17 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 			acc.csa += float64(f.CSA)
 			for _, dep := range f.Dependencies {
 				acc.deps[dep] = struct{}{}
+			}
+			for _, ev := range f.Evidence {
+				acc.evidence = append(acc.evidence, model.EvidenceItem{
+					MetricType:   model.MetricCSA,
+					Component:    ev.Component,
+					Key:          ev.Key,
+					Value:        ev.Value,
+					SourcePath:   ev.SourcePath,
+					ManifestKind: ev.ManifestKind,
+					ManifestName: ev.ManifestName,
+				})
 			}
 			if manSvcName == "" && f.ManifestName != "" {
 				manSvcName = f.ManifestName
@@ -189,6 +201,7 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 				for dep := range acc.deps {
 					macc.deps[dep] = struct{}{}
 				}
+				macc.evidence = append(macc.evidence, acc.evidence...)
 				macc.srcs += acc.srcs
 				macc.parse += acc.parse
 				delete(byService, acc.name)
@@ -208,6 +221,7 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 			Repository:   root,
 			Dependencies: mapKeys(acc.deps),
 			Metrics:      m,
+			Evidence:     map[model.MetricType][]model.EvidenceItem{model.MetricCSA: acc.evidence},
 		})
 	}
 	if len(out) == 0 {
