@@ -21,7 +21,7 @@ const METRIC_COLOR = Object.fromEntries(METRICS.map(m => [m.key, m.color]));
 let state = {
   services: [],        // from /api/services
   overview: null,      // from /api/overview
-  selectedService: null, // id
+  selectedService: null, // id — null means repo-wide view
   view: 'overview',
 };
 
@@ -48,6 +48,21 @@ function fmtShort(n) {
 
 function escapeHTML(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── Context helpers ─── */
+function isRepoView() {
+  return state.selectedService === null;
+}
+
+function getSelectedServiceData() {
+  if (!state.overview || !state.overview.services) return null;
+  return state.overview.services.find(s => s.id === state.selectedService) || null;
+}
+
+function getSelectedServiceName() {
+  const svc = state.services.find(s => s.id === state.selectedService);
+  return svc?.name ?? null;
 }
 
 /* ═══════════════════════════════════════════
@@ -78,10 +93,6 @@ async function loadAll() {
     populateServiceList();
     populateServiceSelect();
 
-    if (!state.selectedService && state.services.length > 0) {
-      state.selectedService = state.services[0].id;
-    }
-
     renderOverview();
     renderServicesTable();
 
@@ -106,6 +117,13 @@ function populateServiceList() {
   }
   section.style.display = '';
 
+  // "All Services" button at top
+  const allBtn = document.createElement('button');
+  allBtn.className = 'sidebar-svc sidebar-svc--all' + (isRepoView() ? ' active' : '');
+  allBtn.textContent = 'All Services';
+  allBtn.addEventListener('click', () => selectService(null));
+  container.appendChild(allBtn);
+
   for (const s of state.services) {
     const btn = document.createElement('button');
     btn.className = 'sidebar-svc' + (state.selectedService === s.id ? ' active' : '');
@@ -119,6 +137,14 @@ function populateServiceList() {
 function populateServiceSelect() {
   const sel = $('#serviceSelect');
   sel.innerHTML = '';
+
+  // "All Services" option
+  const allOpt = document.createElement('option');
+  allOpt.value = '';
+  allOpt.textContent = 'All Services (Repo)';
+  if (isRepoView()) allOpt.selected = true;
+  sel.appendChild(allOpt);
+
   for (const s of state.services) {
     const opt = document.createElement('option');
     opt.value = s.id;
@@ -133,15 +159,56 @@ function populateServiceSelect() {
 
 function selectService(id) {
   state.selectedService = id;
+
   // Update sidebar highlights
-  $$('.sidebar-svc').forEach(el => el.classList.remove('active'));
   $$('.sidebar-svc').forEach(el => {
-    const svc = state.services.find(s => s.name === el.textContent);
-    if (svc && svc.id === id) el.classList.add('active');
+    el.classList.remove('active');
+    if (id === null && el.classList.contains('sidebar-svc--all')) {
+      el.classList.add('active');
+    } else {
+      const svc = state.services.find(s => s.name === el.textContent);
+      if (svc && svc.id === id) el.classList.add('active');
+    }
   });
+
   // Update select
-  $('#serviceSelect').value = id;
-  loadServiceDetail(id);
+  $('#serviceSelect').value = id === null ? '' : id;
+
+  // Re-render overview with correct context
+  renderOverview();
+
+  // Load service detail charts (or clear them for repo view)
+  if (id !== null) {
+    loadServiceDetail(id);
+  } else {
+    clearServiceCharts();
+  }
+}
+
+function clearServiceCharts() {
+  // Clear per-service charts when in repo-wide view
+  const trendCanvas = $('#trendChart');
+  const radarCanvas = $('#radarChart');
+  const barCanvas = $('#barChart');
+
+  for (const canvas of [trendCanvas, radarCanvas, barCanvas]) {
+    if (!canvas) continue;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const w = rect.width;
+    const h = canvas === trendCanvas ? 200 : 280;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#6b727d';
+    ctx.font = '13px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Select a service to see detailed charts', w / 2, h / 2);
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -151,13 +218,30 @@ function renderOverview() {
   const ov = state.overview;
   if (!ov) return;
 
+  if (isRepoView()) {
+    renderRepoOverview(ov);
+  } else {
+    renderServiceOverview(ov);
+  }
+}
+
+/* ─── Repo-wide overview ─── */
+function renderRepoOverview(ov) {
+  // Page title
+  $('#pageTitle').textContent = 'Repository Overview';
+
   // Hero cards
   const ocmAvg = ov.ocmAvg;
   $('#heroOCM').textContent = ocmAvg != null ? fmt(ocmAvg) : '--';
   $('#heroOCMSub').textContent = `Average across ${ov.servicesWithOCM || 0} services`;
+  $('#heroCountLabel').textContent = 'Services Analyzed';
   $('#heroCount').textContent = ov.serviceCount || 0;
 
-  // Metric tiles
+  // Section header
+  $('.section-header .section-title').textContent = 'Metric Breakdown';
+  $('.section-header .section-sub').textContent = 'Aggregated across all services. Click a tile for details.';
+
+  // Metric tiles — repo-wide aggregates
   const grid = $('#metricGrid');
   grid.innerHTML = '';
 
@@ -176,12 +260,83 @@ function renderOverview() {
         <span class="metric-tile-label">${m.key}</span>
         <span class="metric-tile-badge">${count} svc</span>
       </div>
-      <div class="metric-tile-value">${fmtShort(sum)}</div>
+      <div class="metric-tile-value">${fmtShort(avg)}</div>
       <div class="metric-tile-sub">${m.label}</div>
+      <div class="metric-tile-detail">avg across repo &middot; total: ${fmtShort(sum)}</div>
+      <div class="metric-tile-sparkline"><canvas height="32" data-metric="${m.key}"></canvas></div>
+    `;
+    // In repo view, clicking a tile is informational (no single service to show evidence for)
+    // We'll show aggregate info or prompt to select a service
+    tile.addEventListener('click', () => {
+      // Switch to services view so user can pick a service
+      switchView('services');
+    });
+    grid.appendChild(tile);
+  }
+
+  // Update chart section headers
+  updateChartHeaders(null);
+}
+
+/* ─── Service-specific overview ─── */
+function renderServiceOverview(ov) {
+  const svcData = getSelectedServiceData();
+  const svcName = getSelectedServiceName();
+
+  // Page title
+  $('#pageTitle').textContent = svcName || 'Service Overview';
+
+  // Hero cards — service-specific
+  const ocm = svcData?.ocm;
+  $('#heroOCM').textContent = ocm != null ? fmt(ocm) : '--';
+  $('#heroOCMSub').textContent = svcName ? `Composite score for ${svcName}` : 'Service composite score';
+  // Show metric count for this service
+  const metricCount = svcData?.metrics ? Object.keys(svcData.metrics).length : 0;
+  $('#heroCountLabel').textContent = 'Metrics Active';
+  $('#heroCount').textContent = metricCount;
+
+  // Section header
+  $('.section-header .section-title').textContent = 'Metric Breakdown';
+  $('.section-header .section-sub').textContent = `Individual metric values for ${svcName || 'this service'}. Click a tile for evidence.`;
+
+  // Metric tiles — service-specific values
+  const grid = $('#metricGrid');
+  grid.innerHTML = '';
+
+  for (const m of METRICS) {
+    const val = svcData?.metrics?.[m.key];
+
+    const tile = document.createElement('div');
+    tile.className = 'metric-tile';
+    tile.dataset.metric = m.key;
+    tile.innerHTML = `
+      <div class="metric-tile-indicator" style="background:${m.color}"></div>
+      <div class="metric-tile-header">
+        <span class="metric-tile-label">${m.key}</span>
+        <span class="metric-tile-badge">${svcName || 'svc'}</span>
+      </div>
+      <div class="metric-tile-value">${fmtShort(val)}</div>
+      <div class="metric-tile-sub">${m.label}</div>
+      <div class="metric-tile-detail">${m.desc}</div>
       <div class="metric-tile-sparkline"><canvas height="32" data-metric="${m.key}"></canvas></div>
     `;
     tile.addEventListener('click', () => openEvidence(m.key));
     grid.appendChild(tile);
+  }
+
+  // Update chart section headers
+  updateChartHeaders(svcName);
+}
+
+function updateChartHeaders(svcName) {
+  const trendCard = $('#trendCard');
+  if (trendCard) {
+    const sub = trendCard.querySelector('.card-sub');
+    if (sub) {
+      sub.textContent = svcName
+        ? `Composite score over time for ${svcName}`
+        : 'Select a service to see score trends';
+    }
   }
 }
 
@@ -198,6 +353,9 @@ function renderServicesTable() {
   for (const s of ov.services) {
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
+    if (state.selectedService === s.id) {
+      tr.classList.add('selected');
+    }
     tr.addEventListener('click', () => {
       switchView('overview');
       selectService(s.id);
@@ -377,8 +535,7 @@ function drawRadarChart(serviceId, metricData) {
   const n = METRICS.length;
   const angleStep = (Math.PI * 2) / n;
 
-  // Get latest value for each metric (normalized 0-1 from overview services)
-  // We'll use the raw latest values and normalize locally
+  // Get latest value for each metric
   const svc = state.overview?.services?.find(s => s.id === serviceId);
   const rawVals = METRICS.map(m => {
     if (svc && svc.metrics && svc.metrics[m.key] != null) return svc.metrics[m.key];
@@ -602,9 +759,8 @@ function drawSparklines(metricData) {
    Evidence modal
    ═══════════════════════════════════════════ */
 async function openEvidence(metricType) {
-  const sel = $('#serviceSelect');
-  const serviceId = state.selectedService || Number(sel.value);
-  if (!serviceId) return;
+  const serviceId = state.selectedService;
+  if (!serviceId) return; // No evidence in repo-wide view
 
   const svc = state.services.find(s => s.id === serviceId);
   const serviceName = svc?.name ?? String(serviceId);
@@ -639,7 +795,7 @@ async function openEvidence(metricType) {
 
     if (items.length === 0) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="5" style="color:var(--text-tertiary);text-align:center;padding:24px">No evidence recorded for this metric. Run analysis on a repository with relevant manifests.</td>`;
+      tr.innerHTML = `<td colspan="5" style="color:var(--text-tertiary);text-align:center;padding:24px">No evidence recorded for this metric. The metric value may be zero, or evidence generation is not applicable.</td>`;
       tbody.appendChild(tr);
     }
   } catch (e) {
@@ -661,11 +817,19 @@ function switchView(view) {
   });
   $('#overviewView').style.display = view === 'overview' ? '' : 'none';
   $('#servicesView').style.display = view === 'services' ? '' : 'none';
-  $('#pageTitle').textContent = view === 'overview' ? 'Overview' : 'Services';
+
+  if (view === 'services') {
+    $('#pageTitle').textContent = 'Services';
+  } else {
+    // Re-render overview to set proper title
+    renderOverview();
+  }
 
   // Re-render charts when switching to overview (canvas sizing)
   if (view === 'overview' && state.selectedService) {
     setTimeout(() => loadServiceDetail(state.selectedService), 50);
+  } else if (view === 'overview' && isRepoView()) {
+    setTimeout(() => clearServiceCharts(), 50);
   }
 }
 
@@ -680,7 +844,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Service select
   $('#serviceSelect').addEventListener('change', (e) => {
-    selectService(Number(e.target.value));
+    const val = e.target.value;
+    selectService(val === '' ? null : Number(val));
   });
 
   // Refresh
@@ -704,6 +869,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       if (state.selectedService) loadServiceDetail(state.selectedService);
+      else clearServiceCharts();
     }, 200);
   });
 

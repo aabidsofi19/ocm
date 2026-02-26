@@ -187,6 +187,14 @@ body {
 }
 .sidebar-svc:hover { background: var(--bg-hover); color: var(--text-primary); }
 .sidebar-svc.active { background: var(--accent-muted); color: var(--accent-hover); }
+.sidebar-svc--all {
+  font-family: var(--font);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  padding-bottom: 8px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
 
 .sidebar-footer {
   margin-top: auto;
@@ -459,6 +467,13 @@ body {
   margin-top: 4px;
 }
 
+.metric-tile-detail {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
 .metric-tile-sparkline {
   margin-top: 12px;
   height: 32px;
@@ -540,6 +555,7 @@ body {
 
 .table tbody tr { transition: background var(--duration) var(--ease); }
 .table tbody tr:hover td { background: var(--bg-hover); }
+.table tbody tr.selected td { background: var(--accent-subtle); }
 .table tbody tr:last-child td { border-bottom: none; }
 
 .table tbody .svc-name {
