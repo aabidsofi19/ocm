@@ -5,9 +5,28 @@ import "time"
 type MetricType string
 
 const (
-	MetricCSA MetricType = "CSA"
-	MetricDD  MetricType = "DD"
+	MetricCSA MetricType = "CSA" // Configuration Surface Area
+	MetricDD  MetricType = "DD"  // Dependency Depth
+	MetricDB  MetricType = "DB"  // Dependency Breadth
+	MetricCV  MetricType = "CV"  // Change Volatility
+	MetricFE  MetricType = "FE"  // Failure Exposure
+	MetricCDR MetricType = "CDR" // Configuration Drift Risk
 )
+
+// AllMetrics lists every metric type in canonical order.
+var AllMetrics = []MetricType{MetricCSA, MetricDD, MetricDB, MetricCV, MetricFE, MetricCDR}
+
+// DefaultWeights defines the default weight for each metric in the composite
+// OCM score. The weights are equal (1/6 each). They MUST sum to 1.0.
+// Weights are configurable per the composite scoring spec.
+var DefaultWeights = map[MetricType]float64{
+	MetricCSA: 1.0 / 6.0,
+	MetricDD:  1.0 / 6.0,
+	MetricDB:  1.0 / 6.0,
+	MetricCV:  1.0 / 6.0,
+	MetricFE:  1.0 / 6.0,
+	MetricCDR: 1.0 / 6.0,
+}
 
 type Service struct {
 	ID         int64  `json:"id"`

@@ -6,102 +6,163 @@
     <title>OCM Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="bg"></div>
-    <header class="top">
-      <div class="brand">
-        <div class="mark">OCM</div>
-        <div class="meta">
-          <div class="title">Operational Complexity Meter</div>
-          <div class="sub">POC: CSA only</div>
+    <!-- ─── Sidebar ─── -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo">OCM</div>
+        <div class="sidebar-title">Operational<br/>Complexity Meter</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Navigation</div>
+        <button class="sidebar-link active" data-view="overview">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+          Overview
+        </button>
+        <button class="sidebar-link" data-view="services">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Services
+        </button>
+      </div>
+      <div class="sidebar-section" id="serviceListSection" style="display:none">
+        <div class="sidebar-label">Services</div>
+        <div id="serviceList" class="sidebar-services"></div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="sidebar-version">Phase 3</div>
+      </div>
+    </nav>
+
+    <!-- ─── Main Content ─── -->
+    <main class="main" id="main">
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="topbar-menu" id="menuToggle" aria-label="Toggle sidebar">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+          <h1 class="topbar-title" id="pageTitle">Overview</h1>
+        </div>
+        <div class="topbar-actions">
+          <select id="serviceSelect" class="select" style="display:none">
+            <option value="">All services</option>
+          </select>
+          <button id="refreshBtn" class="btn btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7a5.5 5.5 0 1 1 1.1 3.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1 4.5V7h2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <!-- ─── Overview View ─── -->
+      <div class="view" id="overviewView">
+        <!-- Hero row: OCM score + status -->
+        <div class="hero-row">
+          <div class="hero-card">
+            <div class="hero-label">Composite OCM Score</div>
+            <div class="hero-value" id="heroOCM">--</div>
+            <div class="hero-sub" id="heroOCMSub">Average across all services</div>
+          </div>
+          <div class="hero-card hero-card--secondary">
+            <div class="hero-label">Services Analyzed</div>
+            <div class="hero-value" id="heroCount">0</div>
+            <div class="hero-sub" id="heroStatus">
+              <span class="status-dot status-dot--ok" id="statusDot"></span>
+              <span id="statusText">Checking...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric tiles grid -->
+        <div class="section-header">
+          <h2 class="section-title">Metric Breakdown</h2>
+          <p class="section-sub">Latest values aggregated across all services. Click a tile for details.</p>
+        </div>
+        <div class="metric-grid" id="metricGrid">
+          <!-- Filled dynamically -->
+        </div>
+
+        <!-- Score trend chart -->
+        <div class="card card--wide" id="trendCard">
+          <div class="card-header">
+            <h3 class="card-title">OCM Score Trend</h3>
+            <p class="card-sub">Composite score over time for the selected service</p>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="trendChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Metric radar / bar chart -->
+        <div class="chart-row">
+          <div class="card card--half">
+            <div class="card-header">
+              <h3 class="card-title">Metric Profile</h3>
+              <p class="card-sub">Normalized values (0-1) for the selected service</p>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="radarChart" height="280"></canvas>
+            </div>
+          </div>
+          <div class="card card--half">
+            <div class="card-header">
+              <h3 class="card-title">Raw Values</h3>
+              <p class="card-sub">Absolute metric values before normalization</p>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="barChart" height="280"></canvas>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="controls">
-        <label class="field">
-          <span>Service</span>
-          <select id="serviceSelect"></select>
-        </label>
-        <button id="refreshBtn" class="btn">Refresh</button>
+
+      <!-- ─── Services View ─── -->
+      <div class="view" id="servicesView" style="display:none">
+        <div class="section-header">
+          <h2 class="section-title">Service Comparison</h2>
+          <p class="section-sub">All services with their latest metric values and composite OCM score</p>
+        </div>
+        <div class="card card--wide card--table">
+          <div class="table-wrap">
+            <table class="table" id="servicesTable">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th class="num">CSA</th>
+                  <th class="num">DD</th>
+                  <th class="num">DB</th>
+                  <th class="num">CV</th>
+                  <th class="num">FE</th>
+                  <th class="num">CDR</th>
+                  <th class="num">OCM</th>
+                </tr>
+              </thead>
+              <tbody id="servicesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </header>
-
-    <main class="grid">
-      <section class="card" id="statusCard">
-        <div class="cardTitle">Status</div>
-        <div class="statusRow">
-          <div class="pill" id="apiPill">API: unknown</div>
-          <div class="pill" id="dbPill">DB: loaded</div>
-        </div>
-        <div class="small" id="note">If you see no services, run analysis again or point `--repo` at a folder with Kubernetes YAML.</div>
-      </section>
-
-      <section class="card" id="breakdownCard">
-        <div class="cardTitle">Current Snapshot</div>
-        <div class="kpis">
-          <div class="kpi">
-            <div class="kpiLabel">Repo CSA (latest sum)</div>
-            <div class="kpiValue" id="repoCsaValue">-</div>
-            <div class="kpiHint" id="repoCsaHint">Sum of latest CSA across services</div>
-          </div>
-          <div class="kpi">
-            <div class="kpiLabel">Repo OCM (latest avg)</div>
-            <div class="kpiValue" id="repoOcmValue">-</div>
-            <div class="kpiHint" id="repoOcmHint">Average of latest OCM across services</div>
-          </div>
-          <div class="kpi clickable" id="csaTile" title="Click to view evidence">
-            <div class="kpiLabel">CSA (latest)</div>
-            <div class="kpiValue" id="csaValue">-</div>
-            <div class="kpiHint">Configuration surface area</div>
-          </div>
-          <div class="kpi">
-            <div class="kpiLabel">OCM (latest)</div>
-            <div class="kpiValue" id="ocmValue">-</div>
-            <div class="kpiHint">Composite score (0..1)</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" id="metricsCard">
-        <div class="cardTitle">Metrics Explained</div>
-        <details open>
-          <summary>CSA — Configuration Surface Area</summary>
-          <div class="detailBody">
-            <p><span class="kw">Spec definition</span>: count of configurable parameters + environment variables + resource specifications + replica configurations.</p>
-            <p><span class="kw">This POC extracts</span> (from Kubernetes YAML): container env entries, container ports, leaf keys under <code>resources</code>, presence of <code>spec.replicas</code>, plus a heuristic count of top-level keys under <code>spec</code>.</p>
-            <p><span class="kw">Evidence</span>: click the CSA tile to see the individual items that contributed to the latest CSA.</p>
-          </div>
-        </details>
-        <details>
-          <summary>OCM — Composite Score</summary>
-          <div class="detailBody">
-            <p><span class="kw">Definition</span>: a weighted aggregate of normalized metrics. This POC stores the composite OCM score per service per run in SQLite.</p>
-            <p><span class="kw">Note</span>: the current UI does not show a trendline, only the latest OCM value (and a repo-level average).</p>
-          </div>
-        </details>
-      </section>
-
-      <section class="card" id="rawCard">
-        <div class="cardTitle">Raw CSA Series</div>
-        <pre id="raw" class="pre"></pre>
-      </section>
     </main>
 
-    <div class="modal" id="modal" aria-hidden="true">
-      <div class="modalScrim" id="modalScrim"></div>
-      <div class="modalPanel" role="dialog" aria-modal="true" aria-label="Metric evidence">
-        <div class="modalTop">
+    <!-- ─── Evidence Modal ─── -->
+    <div class="modal-overlay" id="modal" aria-hidden="true">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Metric evidence">
+        <div class="modal-header">
           <div>
-            <div class="modalTitle" id="modalTitle">Evidence</div>
-            <div class="modalSub" id="modalSub"></div>
+            <h2 class="modal-title" id="modalTitle">Evidence</h2>
+            <p class="modal-sub" id="modalSub"></p>
           </div>
-          <button class="btn" id="closeModalBtn">Close</button>
+          <button class="btn btn-ghost" id="closeModalBtn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
         </div>
-        <div class="modalBody">
-          <div class="small" id="modalMeta"></div>
-          <div class="tableWrap">
+        <div class="modal-body">
+          <p class="modal-meta" id="modalMeta"></p>
+          <div class="table-wrap">
             <table class="table" id="evidenceTable">
               <thead>
                 <tr>

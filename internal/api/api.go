@@ -37,22 +37,46 @@ func New(dep Dependencies) http.Handler {
 			writeError(w, http.StatusInternalServerError, err)
 			return
 		}
-		csaSum := 0.0
-		csaCount := 0
+
+		// Per-metric aggregates.
+		type metricAgg struct {
+			Sum   float64  `json:"sum"`
+			Count int      `json:"count"`
+			Avg   *float64 `json:"avg"`
+		}
+		metricAggs := map[string]*metricAgg{}
+		for _, mt := range model.AllMetrics {
+			metricAggs[string(mt)] = &metricAgg{}
+		}
+
 		ocmSum := 0.0
 		ocmCount := 0
+
+		// Per-service latest values for the service breakdown table.
+		type svcSummary struct {
+			ID      int64              `json:"id"`
+			Name    string             `json:"name"`
+			Metrics map[string]float64 `json:"metrics"`
+			OCM     *float64           `json:"ocm"`
+		}
+		var svcSummaries []svcSummary
+
 		for _, s := range svcs {
-			series, err := dep.Store.GetMetricSeries(r.Context(), s.ID, model.MetricCSA)
-			if err != nil {
-				writeError(w, http.StatusInternalServerError, err)
-				return
-			}
-			if len(series) == 0 {
-				// no CSA
-			} else {
-				v := series[len(series)-1].Value
-				csaSum += v
-				csaCount++
+			ss := svcSummary{ID: s.ID, Name: s.Name, Metrics: map[string]float64{}}
+
+			for _, mt := range model.AllMetrics {
+				series, err := dep.Store.GetMetricSeries(r.Context(), s.ID, mt)
+				if err != nil {
+					writeError(w, http.StatusInternalServerError, err)
+					return
+				}
+				if len(series) > 0 {
+					v := series[len(series)-1].Value
+					agg := metricAggs[string(mt)]
+					agg.Sum += v
+					agg.Count++
+					ss.Metrics[string(mt)] = v
+				}
 			}
 
 			scores, err := dep.Store.GetScoreSeries(r.Context(), s.ID)
@@ -60,30 +84,35 @@ func New(dep Dependencies) http.Handler {
 				writeError(w, http.StatusInternalServerError, err)
 				return
 			}
-			if len(scores) == 0 {
-				continue
+			if len(scores) > 0 {
+				v := scores[len(scores)-1].Score
+				ocmSum += v
+				ocmCount++
+				ss.OCM = &v
 			}
-			ocmSum += scores[len(scores)-1].Score
-			ocmCount++
+			svcSummaries = append(svcSummaries, ss)
 		}
-		var csaAvg *float64
-		if csaCount > 0 {
-			v := csaSum / float64(csaCount)
-			csaAvg = &v
+
+		// Compute averages.
+		for _, agg := range metricAggs {
+			if agg.Count > 0 {
+				v := agg.Sum / float64(agg.Count)
+				agg.Avg = &v
+			}
 		}
 		var ocmAvg *float64
 		if ocmCount > 0 {
 			v := ocmSum / float64(ocmCount)
 			ocmAvg = &v
 		}
+
 		writeJSON(w, http.StatusOK, map[string]any{
 			"serviceCount":    len(svcs),
-			"servicesWithCSA": csaCount,
-			"csaSum":          csaSum,
-			"csaAvg":          csaAvg,
 			"servicesWithOCM": ocmCount,
 			"ocmSum":          ocmSum,
 			"ocmAvg":          ocmAvg,
+			"metrics":         metricAggs,
+			"services":        svcSummaries,
 		})
 	})
 

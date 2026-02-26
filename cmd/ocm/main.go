@@ -32,6 +32,7 @@ func main() {
 		host       = flag.String("host", "127.0.0.1", "HTTP server host")
 		port       = flag.Int("port", 8080, "HTTP server port")
 		serviceKey = flag.String("service-key", "dir", "Service identity strategy: dir|manifest")
+		cvWindow   = flag.Int("cv-window", 30, "Change Volatility lookback window in days")
 		printJSON  = flag.Bool("print", false, "Print last run results as JSON")
 	)
 
@@ -59,6 +60,7 @@ func main() {
 	pipe := pipeline.New(pipeline.Options{
 		RepoPath:           absRepo,
 		ServiceKeyStrategy: *serviceKey,
+		CVWindow:           time.Duration(*cvWindow) * 24 * time.Hour,
 		Now:                time.Now,
 		Logger:             log.New(os.Stderr, "", 0),
 	})
