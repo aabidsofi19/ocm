@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Phase 2 Document</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+<style>
+  .mermaid svg { max-width: 100%; height: auto; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Phase 2 Document</h1>
+</header>
+<h1 id="study-project---phase-2-document">Study Project - Phase 2
+Document</h1>
+<p>(Design &amp; Proof of Concept)</p>
+<h2 id="cover-page">Cover Page</h2>
+<ul>
+<li>Course Title: Operational Complexity Meter (OCM): Quantifying
+Operational Complexity in Distributed Systems</li>
+<li>Project Title: Operational Complexity Meter (OCM) - MVP/POC</li>
+<li>Student Name(s): Aabid Ali Sofi</li>
+<li>Student ID(s): 2023EBCS041</li>
+<li>Project Advisor / Supervisor: Preethy P Johny</li>
+<li>Date of Submission: Feb 12, 2026</li>
+</ul>
+<hr />
+<h2 id="introduction">1. Introduction</h2>
+<h3 id="purpose-of-phase-2">1.1 Purpose of Phase 2</h3>
+<p>Phase 2 translates the Phase 1 idea (quantifying operational
+complexity in distributed systems) into an implementable system design
+and a working proof of concept.</p>
+<p>This phase focuses on:</p>
+<ul>
+<li>Converting the problem definition into a concrete architecture and
+requirements.</li>
+<li>Defining the MVP scope and module boundaries for the prototype
+system.</li>
+<li>Validating feasibility by implementing an end-to-end PoC that
+computes and explains at least one operational complexity metric.</li>
+</ul>
+<h3 id="scope-of-phase-2">1.2 Scope of Phase 2</h3>
+<p>Included:</p>
+<ul>
+<li>System architecture aligned to the pipeline described in
+<code>specs/00-overview.md</code>.</li>
+<li>Functional and non-functional requirements for the MVP.</li>
+<li>Database schema and data flow design.</li>
+<li>A working PoC implementation (single-binary Go app) that:
+<ul>
+<li>parses Kubernetes YAML</li>
+<li>computes metrics</li>
+<li>stores results in SQLite</li>
+<li>serves a local web UI and JSON API</li>
+<li>supports evidence drill-down for the CSA metric</li>
+</ul></li>
+</ul>
+<p>Excluded (prototype scope):</p>
+<ul>
+<li>Production-scale ingestion and long-running scheduled
+execution.</li>
+<li>Authentication/authorization and multi-user access.</li>
+<li>Advanced data sources (Helm rendering, Dockerfile parsing, Git-based
+volatility) beyond what is implemented in the PoC.</li>
+</ul>
+<hr />
+<h2 id="system-overview">2. System Overview</h2>
+<h3 id="product-perspective">2.1 Product Perspective</h3>
+<p>OCM is a standalone prototype tool used by engineers to analyze a
+repository/workspace containing deployment artifacts (Kubernetes YAML,
+and later Helm/Docker/Git signals).</p>
+<p>In the PoC implementation, OCM is shipped as a single executable
+that:</p>
+<ul>
+<li>Runs locally against a repo path (<code>--repo</code>).</li>
+<li>Persists results into a local SQLite DB (<code>--db</code>).</li>
+<li>Serves a local dashboard and API over HTTP.</li>
+</ul>
+<p>Deployment environment:</p>
+<ul>
+<li>Local development machine (desktop/laptop).</li>
+<li>Local HTTP server (intended for localhost use).</li>
+</ul>
+<h3 id="major-system-functions">2.2 Major System Functions</h3>
+<p>Major system functions in the MVP/POC:</p>
+<ul>
+<li>Discover Kubernetes YAML manifests under a repository path.</li>
+<li>Identify services deterministically.</li>
+<li>Parse and normalize config facts.</li>
+<li>Compute MVP metrics:
+<ul>
+<li>CSA (Configuration Surface Area)</li>
+<li>DD (Dependency Depth)</li>
+</ul></li>
+<li>Normalize metrics and compute a composite OCM score.</li>
+<li>Persist services, metrics, composite scores, and metric evidence
+into SQLite.</li>
+<li>Provide a dashboard to:
+<ul>
+<li>display repo-level aggregates</li>
+<li>display per-service latest values</li>
+<li>show evidence for CSA on click</li>
+</ul></li>
+</ul>
+<h3 id="user-classes-and-characteristics">2.3 User Classes and
+Characteristics</h3>
+<ul>
+<li>Engineers / SRE / DevOps: primary users, run OCM locally for insight
+into operational complexity.</li>
+<li>Architects / Tech Leads: compare services and identify risk
+drivers.</li>
+<li>External Systems: not applicable for PoC (no external auth, no
+integrations).</li>
+</ul>
+<hr />
+<h2 id="functional-requirements">3. Functional Requirements</h2>
+<p>FR1: The system shall accept a local repository/workspace path as
+input.</p>
+<p>FR2: The system shall discover Kubernetes manifests
+(<code>.yml</code> / <code>.yaml</code>) under the input path.</p>
+<p>FR3: The system shall deterministically map discovered artifacts to a
+stable service identity.</p>
+<p>FR4: The system shall parse Kubernetes YAML and extract configuration
+facts required to compute CSA.</p>
+<p>FR5: The system shall compute CSA per service for a given analysis
+run.</p>
+<p>FR6: The system shall compute DD per service from an extracted
+dependency graph, with deterministic behavior in the presence of
+cycles.</p>
+<p>FR7: The system shall normalize metric values across a defined cohort
+and compute a composite OCM score.</p>
+<p>FR8: The system shall persist services, metric values, composite
+scores, and metric evidence into a SQLite database.</p>
+<p>FR9: The system shall expose a local HTTP API for reading:</p>
+<ul>
+<li>services</li>
+<li>metric time series</li>
+<li>composite score time series</li>
+<li>repo-level aggregates</li>
+<li>metric evidence for the latest run</li>
+</ul>
+<p>FR10: The system shall serve a local dashboard that displays:</p>
+<ul>
+<li>repo CSA aggregate and repo OCM aggregate</li>
+<li>per-service latest CSA and OCM</li>
+<li>evidence drill-down for CSA</li>
+</ul>
+<hr />
+<h2 id="non-functional-requirements">4. Non-Functional Requirements</h2>
+<h3 id="performance-requirements">4.1 Performance Requirements</h3>
+<ul>
+<li>The PoC should complete analysis on small-to-medium repos (tens to
+hundreds of YAML files) within a reasonable interactive time (seconds to
+a few minutes depending on machine).</li>
+<li>Dashboard and API calls should be responsive (sub-second for typical
+DB sizes in PoC).</li>
+</ul>
+<h3 id="security-requirements">4.2 Security Requirements</h3>
+<ul>
+<li>PoC assumes localhost-only usage. No authentication is
+implemented.</li>
+<li>If exposed beyond local development, authentication/authorization
+must be added (per <code>specs/60-api-backend.md</code>).</li>
+</ul>
+<h3 id="usability-requirements">4.3 Usability Requirements</h3>
+<ul>
+<li>Dashboard must provide readable metric labels and a clear
+empty/error state.</li>
+<li>Evidence drill-down must show enough traceability to justify metric
+values (source file path + manifest context).</li>
+</ul>
+<h3 id="scalability-and-maintainability">4.4 Scalability and
+Maintainability</h3>
+<ul>
+<li>Modular design: parsing, pipeline, storage, API, and dashboard are
+separate packages.</li>
+<li>Metrics should be extensible to additional dimensions (DB/CV/FE/CDR)
+in future phases.</li>
+</ul>
+<hr />
+<h2 id="system-architecture-and-design">5. System Architecture and
+Design</h2>
+<h3 id="system-architecture-diagram">5.1 System Architecture
+Diagram</h3>
+<p>High-level architecture (MVP/POC):</p>
+<pre class="mermaid"><code>flowchart LR
+  A[Repo Path
+Kubernetes YAML] --&gt; B[Parser &amp; Normalization]
+  B --&gt; C[Metric Engine
+CSA, DD]
+  C --&gt; D[Composite Scoring
+Normalization + Weights]
+  D --&gt; E[SQLite
+services/metrics/scores/evidence]
+  E --&gt; F[Embedded HTTP API]
+  F --&gt; G[Dashboard UI
+static assets]</code></pre>
+<p>Brief explanation:</p>
+<ul>
+<li>The CLI triggers analysis on startup.</li>
+<li>The pipeline computes metric values and attaches evidence.</li>
+<li>Results are persisted into SQLite for querying.</li>
+<li>The embedded HTTP server serves an API and a static dashboard.</li>
+</ul>
+<h3 id="module-wise-design">5.2 Module-wise Design</h3>
+<p>Implementation references are based on the current PoC code:</p>
+<ul>
+<li>CLI + Server (<code>cmd/ocm/main.go</code>)
+<ul>
+<li>Runs the analysis pipeline once on startup</li>
+<li>Migrates the DB schema</li>
+<li>Saves the run results</li>
+<li>Starts HTTP server for <code>/api/*</code> + <code>/</code>
+dashboard</li>
+</ul></li>
+<li>Parser &amp; Normalization
+(<code>internal/parser/yamlscan.go</code>)
+<ul>
+<li>Inputs: Kubernetes YAML documents</li>
+<li>Outputs: per-document facts for CSA, inferred dependencies, evidence
+items</li>
+<li>Evidence includes: component type
+(env/port/resource/replica/spec_key), key/value, source file path,
+manifest kind/name</li>
+</ul></li>
+<li>Pipeline (<code>internal/pipeline/pipeline.go</code>)
+<ul>
+<li>Discovers YAML files</li>
+<li>Service identification strategies:
+<ul>
+<li><code>dir</code> (default): service name = first directory segment
+under <code>--repo</code></li>
+<li><code>manifest</code>: service name from
+<code>metadata.name</code></li>
+</ul></li>
+<li>Aggregates parsed facts per service</li>
+<li>Computes metrics (CSA, DD)</li>
+<li>Normalizes and computes composite OCM score</li>
+</ul></li>
+<li>Metric Engine
+<ul>
+<li>CSA: computed as a count of extracted configuration facts</li>
+<li>DD: computed as longest path length in the SCC-condensed DAG (cycles
+handled deterministically)</li>
+</ul></li>
+<li>Storage (SQLite) (<code>internal/storage/storage.go</code>)
+<ul>
+<li>Migrates schema</li>
+<li>Saves per-run metrics, scores, and evidence</li>
+<li>Serves query methods for API</li>
+</ul></li>
+<li>Embedded API (<code>internal/api/api.go</code>)
+<ul>
+<li>Provides health, service listing, metric and score series, overview
+aggregates, and evidence endpoints</li>
+</ul></li>
+<li>Dashboard (<code>internal/dashboard/</code>)
+<ul>
+<li>Static HTML/CSS/JS assets embedded into the Go binary</li>
+<li>Provides per-service selection and metric drill-down modal</li>
+</ul></li>
+</ul>
+<h3 id="data-flow-design">5.3 Data Flow Design</h3>
+<p>End-to-end data flow in the PoC:</p>
+<ol type="1">
+<li>Input selection
+<ul>
+<li>User runs the CLI with <code>--repo</code> and
+<code>--db</code>.</li>
+</ul></li>
+<li>Discovery
+<ul>
+<li>Walk the repo filesystem and collect
+<code>.yml</code>/<code>.yaml</code> files.</li>
+</ul></li>
+<li>Parsing and fact extraction
+<ul>
+<li>Decode YAML documents</li>
+<li>Extract CSA contributors and store them as evidence</li>
+<li>Extract inferred dependencies (best-effort heuristics)</li>
+</ul></li>
+<li>Metric computation
+<ul>
+<li>CSA is aggregated per service</li>
+<li>DD is computed from the inferred dependency graph</li>
+</ul></li>
+<li>Normalization and composite
+<ul>
+<li>Cohort: all services in the current run</li>
+<li>Normalization: <code>(M - min) / (max - min)</code>; if
+<code>max == min</code>, normalized value is <code>0</code></li>
+<li>Composite score: MVP uses CSA and DD only (default weights
+0.5/0.5)</li>
+</ul></li>
+<li>Persistence
+<ul>
+<li>Insert/ensure service rows</li>
+<li>Insert metric rows</li>
+<li>Insert composite score row</li>
+<li>Insert metric evidence rows</li>
+</ul></li>
+<li>Presentation
+<ul>
+<li>UI loads <code>/api/overview</code> and
+<code>/api/services</code></li>
+<li>UI loads per-service metric series and score series</li>
+<li>UI loads metric evidence on click</li>
+</ul></li>
+</ol>
+<h3 id="database-design">5.4 Database Design</h3>
+<p>The PoC implements the Phase-2 schema in
+<code>specs/50-persistence-sqlite.md</code> and extends it with a metric
+evidence table.</p>
+<p>Core tables:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>services(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  name TEXT,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  repository TEXT</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>metrics(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  service_id <span class="dt">INTEGER</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  metric_type TEXT,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  metric_value <span class="dt">REAL</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">timestamp</span> TEXT</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>composite_scores(</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  service_id <span class="dt">INTEGER</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  ocm_score <span class="dt">REAL</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">timestamp</span> TEXT</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>Evidence table (PoC extension):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>metric_evidence(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INTEGER</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  service_id <span class="dt">INTEGER</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  metric_type TEXT,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  component TEXT,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  evidence_key TEXT,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  evidence_value TEXT,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  source_path TEXT,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  manifest_kind TEXT,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  manifest_name TEXT,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">timestamp</span> TEXT</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>Rationale for evidence storage:</p>
+<ul>
+<li>CSA is a count; the evidence list makes CSA explainable and
+debuggable.</li>
+<li>Each run stores evidence with the same run timestamp.</li>
+</ul>
+<hr />
+<h2 id="technology-stack-and-justification">6. Technology Stack and
+Justification</h2>
+<ul>
+<li>Backend/CLI: Go
+<ul>
+<li>Single-binary distribution and a simple local deployment story.</li>
+<li>Good fit for embedded HTTP server and fast file scanning.</li>
+</ul></li>
+<li>Database: SQLite (embedded)
+<ul>
+<li>Zero configuration and deterministic storage.</li>
+<li>Easy to query for dashboard needs.</li>
+</ul></li>
+<li>Parsing: <code>gopkg.in/yaml.v3</code>
+<ul>
+<li>Reliable YAML decoding for Kubernetes manifests.</li>
+</ul></li>
+<li>UI: Static HTML/CSS/JS
+<ul>
+<li>Served directly by the embedded server.</li>
+<li>No runtime frontend build chain required.</li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="proof-of-concept-poc">7. Proof of Concept (PoC)</h2>
+<h3 id="poc-description">7.1 PoC Description</h3>
+<p>The PoC validates that OCM can:</p>
+<ul>
+<li>Ingest real-world Kubernetes YAML.</li>
+<li>Compute a meaningful operational complexity proxy (CSA).</li>
+<li>Persist results and expose them through a dashboard and API.</li>
+<li>Provide “explainability” of metric values through evidence
+drill-down.</li>
+</ul>
+<p>PoC implementation entrypoints:</p>
+<ul>
+<li>Run: <code>just run REPO=/path DB=ocm.sqlite PORT=8080</code></li>
+<li>Dashboard: <code>http://127.0.0.1:8080/</code></li>
+</ul>
+<h3 id="poc-demonstration-details">7.2 PoC Demonstration Details</h3>
+<p>Demonstrated features:</p>
+<ul>
+<li>Repo-level aggregates:
+<ul>
+<li>Repo CSA (latest sum)</li>
+<li>Repo OCM (latest avg)</li>
+</ul></li>
+<li>Per-service latest CSA and OCM</li>
+<li>Evidence drill-down for CSA (click CSA tile)</li>
+<li>API endpoints:
+<ul>
+<li><code>GET /api/healthz</code></li>
+<li><code>GET /api/overview</code></li>
+<li><code>GET /api/services</code></li>
+<li><code>GET /api/services/{id}/metrics/CSA</code></li>
+<li><code>GET /api/services/{id}/metrics/CSA/evidence</code></li>
+<li><code>GET /api/services/{id}/scores</code></li>
+</ul></li>
+</ul>
+<p>Current limitations:</p>
+<ul>
+<li>CSA extraction is heuristic and intentionally simplified.</li>
+<li>Dependency extraction is heuristic; DD correctness depends on naming
+conventions.</li>
+<li>Helm chart rendering and Git-based volatility are not implemented in
+the PoC.</li>
+<li>Pipeline runs on startup only (no “re-run” button in UI).</li>
+</ul>
+<hr />
+<h2 id="testing-and-validation-strategy">8. Testing and Validation
+Strategy</h2>
+<ul>
+<li>Unit tests
+<ul>
+<li>Longest-path/DD behavior with cycles is validated with SCC
+condensation tests.</li>
+<li>Normalization edge case (<code>max == min</code>) is validated.</li>
+<li>See: <code>internal/pipeline/pipeline_test.go</code></li>
+</ul></li>
+<li>Manual testing
+<ul>
+<li>Run the tool against a repository such as
+<code>argoproj/argocd-example-apps</code>.</li>
+<li>Verify:
+<ul>
+<li>services are discovered</li>
+<li>CSA values change when YAML config changes</li>
+<li>evidence list reflects the underlying YAML facts</li>
+</ul></li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="risks-challenges-and-mitigation">9. Risks, Challenges, and
+Mitigation</h2>
+<p>Identified risks:</p>
+<ul>
+<li>R1: Service identification ambiguity (repo structures vary)
+<ul>
+<li>Mitigation: provide multiple strategies
+(<code>--service-key dir|manifest</code>) and document behavior.</li>
+</ul></li>
+<li>R2: Dependency extraction uncertainty (DD requires consistent
+evidence)
+<ul>
+<li>Mitigation: implement deterministic cycle handling; document current
+heuristics; plan future extraction via ingress/service refs.</li>
+</ul></li>
+<li>R3: Metric validity vs. heuristic implementation
+<ul>
+<li>Mitigation: keep PoC transparent by storing evidence; iterate on
+extraction rules with real datasets.</li>
+</ul></li>
+<li>R4: Scope creep (many metrics and data sources)
+<ul>
+<li>Mitigation: enforce MVP focus (CSA/DD) and add metrics
+incrementally.</li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="phase-2-outcomes-and-readiness-for-phase-3">10. Phase 2 Outcomes
+and Readiness for Phase 3</h2>
+<p>Phase 2 outcomes:</p>
+<ul>
+<li>A concrete system design aligned to the architecture described in
+<code>specs/</code>.</li>
+<li>A working end-to-end PoC:
+<ul>
+<li>ingestion (Kubernetes YAML)</li>
+<li>metric computation (CSA, DD)</li>
+<li>scoring (composite OCM)</li>
+<li>persistence (SQLite)</li>
+<li>visualization + API</li>
+<li>evidence drill-down for CSA</li>
+</ul></li>
+</ul>
+<p>Readiness for Phase 3:</p>
+<ul>
+<li>The codebase provides a modular foundation to add:
+<ul>
+<li>improved parsing rules</li>
+<li>additional data sources (Helm, Git)</li>
+<li>additional metrics (CV/FE/CDR)</li>
+<li>richer UI views</li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="supervisor-review-and-approval">11. Supervisor Review and
+Approval</h2>
+<ul>
+<li>Advisor Feedback:</li>
+<li>Supervisor Comments:</li>
+<li>Recommendations:</li>
+<li>Signature: ___________________________</li>
+<li>Date: _______________________________</li>
+</ul>
+<script>
+  (function () {
+    function toMermaidDivs() {
+      var blocks = Array.prototype.slice.call(document.querySelectorAll('pre > code.language-mermaid'));
+      blocks.forEach(function (code) {
+        var pre = code.parentElement;
+        var div = document.createElement('div');
+        div.className = 'mermaid';
+        div.textContent = code.textContent;
+        pre.replaceWith(div);
+      });
+      return blocks.length;
+    }
+
+    function runMermaid() {
+      if (!window.mermaid) return;
+      try {
+        window.mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        // mermaid.run exists in mermaid v10+
+        if (window.mermaid.run) {
+          window.mermaid.run({ querySelector: '.mermaid' });
+        } else {
+          window.mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+        }
+      } catch (e) {
+        console.error('mermaid render failed', e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var n = toMermaidDivs();
+      if (!n) return;
+      // Give the mermaid script a moment to load.
+      var tries = 0;
+      (function tick() {
+        tries++;
+        if (window.mermaid) {
+          runMermaid();
+          return;
+        }
+        if (tries < 50) return setTimeout(tick, 100);
+      })();
+    });
+  })();
+</script>
+</body>
+</html>
