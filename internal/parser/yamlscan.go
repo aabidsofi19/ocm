@@ -14,8 +14,11 @@ import (
 // another service. The list is intentionally broad to catch real-world patterns
 // across Sock Shop, Google Online Boutique, Helm charts, and typical
 // Rails/Django/Spring deployments.
+//
+// Note: _SERVICE_PORT is excluded because its value is a port number, not a
+// service reference.
 var depSuffixes = []string{
-	"_SERVICE", "_SERVICE_HOST", "_SERVICE_PORT",
+	"_SERVICE", "_SERVICE_HOST",
 	"_ADDR",
 	"_HOST",
 	"_URL",
@@ -174,23 +177,44 @@ func ParseK8sYAMLForFacts(doc []byte, sourcePath string) ([]K8sDocFacts, error) 
 }
 
 func getContainers(doc map[string]any) []map[string]any {
-	// spec.template.spec.containers
-	if spec, ok := getMap(doc, "spec"); ok {
-		if tmpl, ok := spec["template"].(map[string]any); ok {
-			if ts, ok := tmpl["spec"].(map[string]any); ok {
-				if cs, ok := ts["containers"].([]any); ok {
-					var out []map[string]any
-					for _, c := range cs {
-						if cm, ok := c.(map[string]any); ok {
-							out = append(out, cm)
-						}
-					}
-					return out
-				}
-			}
+	spec, ok := getMap(doc, "spec")
+	if !ok {
+		return nil
+	}
+
+	// CronJob: spec.jobTemplate.spec.template.spec.containers
+	if jt, ok := spec["jobTemplate"].(map[string]any); ok {
+		if jtSpec, ok := jt["spec"].(map[string]any); ok {
+			return extractContainersFromPodSpec(jtSpec)
 		}
 	}
-	return nil
+
+	// Deployment/StatefulSet/DaemonSet/Job: spec.template.spec.containers
+	return extractContainersFromPodSpec(spec)
+}
+
+// extractContainersFromPodSpec extracts containers from a spec that has
+// template.spec.containers (works for Deployment, StatefulSet, DaemonSet, Job).
+func extractContainersFromPodSpec(spec map[string]any) []map[string]any {
+	tmpl, ok := spec["template"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	ts, ok := tmpl["spec"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	cs, ok := ts["containers"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []map[string]any
+	for _, c := range cs {
+		if cm, ok := c.(map[string]any); ok {
+			out = append(out, cm)
+		}
+	}
+	return out
 }
 
 func leafPaths(m map[string]any, prefix string) []string {
@@ -334,7 +358,28 @@ func normalizeServiceName(v string) string {
 	if i := strings.IndexByte(v, '.'); i >= 0 {
 		v = v[:i]
 	}
+	// Reject purely numeric results (e.g. port numbers like "5432").
+	if isNumeric(v) {
+		return ""
+	}
+	// Reject localhost — it's a self-reference, not a cross-service dependency.
+	if v == "localhost" || v == "127" {
+		return ""
+	}
 	return v
+}
+
+// isNumeric returns true if s consists entirely of ASCII digits.
+func isNumeric(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // extractFE populates Failure Exposure facts on the given K8sDocFacts.

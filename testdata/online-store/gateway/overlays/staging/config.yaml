@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+data:
+  LOG_LEVEL: warn
+  RATE_LIMIT_ENABLED: "true"
+  CORS_ORIGINS: "https://staging.shop.example.com"

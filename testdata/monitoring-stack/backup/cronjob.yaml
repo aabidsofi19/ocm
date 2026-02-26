@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+  labels:
+    app: backup
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: online-store/backup:v1.0.0
+              env:
+                - name: PROMETHEUS_ADDR
+                  value: "prometheus:9090"
+                - name: S3_ENDPOINT
+                  value: "https://s3.amazonaws.com"
+                - name: ALERTMANAGER_ADDR
+                  value: "alertmanager:9093"
+                - name: GRAFANA_HOST
+                  value: "grafana"
+                - name: GRAFANA_PORT
+                  value: "3000"
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi

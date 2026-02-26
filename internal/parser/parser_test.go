@@ -382,3 +382,95 @@ spec:
 		t.Fatalf("expected 0 deps for plain values, got %v", facts[0].Dependencies)
 	}
 }
+
+func TestDep_NumericValueNotAService(t *testing.T) {
+	// Port numbers and other purely numeric values should never be treated as service names.
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: DB_SERVICE_HOST
+              value: "postgres"
+            - name: DB_SERVICE_PORT
+              value: "5432"
+            - name: CACHE_PORT
+              value: "6379"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	// DB_SERVICE_HOST -> "postgres" is a valid dep.
+	// DB_SERVICE_PORT -> "5432" is numeric, must NOT produce a dep.
+	// CACHE_PORT -> "6379" is not matched by any suffix (no _PORT suffix), so no dep either.
+	if len(deps) != 1 {
+		t.Fatalf("expected 1 dep (postgres), got %d: %v", len(deps), deps)
+	}
+	if deps[0] != "postgres" {
+		t.Fatalf("expected dep 'postgres', got %q", deps[0])
+	}
+}
+
+func TestNormalizeServiceName_Numeric(t *testing.T) {
+	if got := normalizeServiceName("5432"); got != "" {
+		t.Fatalf("numeric-only value should return empty, got %q", got)
+	}
+	if got := normalizeServiceName("0"); got != "" {
+		t.Fatalf("single digit should return empty, got %q", got)
+	}
+	// Non-numeric should pass through.
+	if got := normalizeServiceName("redis"); got != "redis" {
+		t.Fatalf("expected 'redis', got %q", got)
+	}
+	// Mixed alphanumeric should pass through.
+	if got := normalizeServiceName("db2"); got != "db2" {
+		t.Fatalf("expected 'db2', got %q", got)
+	}
+}
+
+func TestDep_CronJobContainers(t *testing.T) {
+	yaml := `
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: backup:latest
+              env:
+                - name: PROMETHEUS_ADDR
+                  value: "prometheus:9090"
+                - name: GRAFANA_HOST
+                  value: "grafana"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(facts) != 1 {
+		t.Fatalf("expected 1 doc, got %d", len(facts))
+	}
+	deps := facts[0].Dependencies
+	sort.Strings(deps)
+	if len(deps) != 2 {
+		t.Fatalf("expected 2 deps (prometheus, grafana), got %d: %v", len(deps), deps)
+	}
+	if deps[0] != "grafana" || deps[1] != "prometheus" {
+		t.Fatalf("expected [grafana prometheus], got %v", deps)
+	}
+}

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: log-collector
+  labels:
+    app: log-collector
+spec:
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+        - name: fluentbit
+          image: fluent/fluent-bit:3.0
+          ports:
+            - containerPort: 2020
+              name: metrics
+          env:
+            - name: ELASTICSEARCH_HOST
+              value: "elasticsearch"
+            - name: ELASTICSEARCH_PORT
+              value: "9200"
+            - name: LOKI_ADDR
+              value: "loki.logging.svc.cluster.local:3100"
+            - name: CLOUD_WATCH_LOG_GROUP
+              value: "https://logs.us-east-1.amazonaws.com"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+        - name: log-router
+          image: online-store/log-router:v0.3.0
+          env:
+            - name: UPSTREAM_ADDR
+              value: "localhost:2020"
+            - name: PROMETHEUS_ENDPOINT
+              value: "http://prometheus:9090/api/v1/write"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi

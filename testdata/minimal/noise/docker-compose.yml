@@ -1,0 +1,13 @@
+# docker-compose is not K8s, parser should skip it gracefully.
+version: "3.8"
+services:
+  web:
+    image: myapp:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://db:5432/myapp
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=myapp

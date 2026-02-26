@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  labels:
+    app: gateway
+    tier: edge
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: online-store/gateway:v1.4.0
+          ports:
+            - containerPort: 8080
+            - containerPort: 8443
+          env:
+            - name: WEB_SERVICE_ADDR
+              value: "web:3000"
+            - name: API_SERVICE_ADDR
+              value: "api:8080"
+            - name: CATALOG_SERVICE_URL
+              value: "http://catalog:5000"
+            - name: RATE_LIMIT_ENABLED
+              value: "true"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: TLS_CERT_PATH
+              value: "/etc/tls/tls.crt"
+            - name: EXTERNAL_AUTH_URL
+              value: "https://auth.example.com/v2/verify"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

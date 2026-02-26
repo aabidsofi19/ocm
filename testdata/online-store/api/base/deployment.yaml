@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: api
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: online-store/api:v3.0.2
+          ports:
+            - containerPort: 8080
+            - containerPort: 9090
+              name: metrics
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DB_HOST
+              value: "db"
+            - name: DB_PORT
+              value: "5432"
+            - name: CACHE_ADDR
+              value: "cache:6379"
+            - name: CART_SERVICE_ADDR
+              value: "cart:4000"
+            - name: PAYMENT_SERVICE_ENDPOINT
+              value: "http://payment:8080/v1"
+            - name: CATALOG_SERVICE_URL
+              value: "http://catalog:5000"
+            - name: NOTIFICATION_SERVICE_URI
+              value: "http://notification.messaging.svc.cluster.local:8080"
+            - name: SEARCH_HOST
+              value: "elasticsearch"
+            - name: JWT_SECRET
+              value: "change-me-in-production"
+            - name: CORS_ORIGINS
+              value: "http://localhost:3000"
+            - name: EXTERNAL_ANALYTICS_URL
+              value: "https://analytics.example.com/v1/events"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  type: ClusterIP
+  selector:
+    app: api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: metrics
+      port: 9090
+      targetPort: 9090

@@ -1,0 +1,21 @@
+# This is a CI/CD pipeline config, not a K8s manifest.
+# The parser should handle it gracefully (skip it).
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - docker build -t myapp .
+
+test:
+  stage: test
+  script:
+    - go test ./...
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl apply -f manifests/

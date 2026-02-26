@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: online-store/web:v2.1.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: API_ENDPOINT
+              value: "http://api:8080"
+            - name: CART_SERVICE_ADDR
+              value: "cart:4000"
+            - name: CATALOG_HOST
+              value: "catalog"
+            - name: SESSION_STORE_URL
+              value: "http://cache.default.svc.cluster.local:6379"
+            - name: CDN_URL
+              value: "https://cdn.example.com/assets"
+            - name: NODE_ENV
+              value: "production"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+    - port: 3000
+      targetPort: 3000
