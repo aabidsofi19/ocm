@@ -51,7 +51,7 @@ func (s *Store) Migrate(ctx context.Context) error {
 			component TEXT NOT NULL,
 			evidence_key TEXT,
 			evidence_value TEXT,
-			source_path TEXT NOT NULL,
+			source_path TEXT NOT NULL DEFAULT '',
 			manifest_kind TEXT,
 			manifest_name TEXT,
 			timestamp TEXT NOT NULL,

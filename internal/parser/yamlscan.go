@@ -4,10 +4,29 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+// depSuffixes are env var name suffixes that commonly indicate a reference to
+// another service. The list is intentionally broad to catch real-world patterns
+// across Sock Shop, Google Online Boutique, Helm charts, and typical
+// Rails/Django/Spring deployments.
+var depSuffixes = []string{
+	"_SERVICE", "_SERVICE_HOST", "_SERVICE_PORT",
+	"_ADDR",
+	"_HOST",
+	"_URL",
+	"_ENDPOINT",
+	"_URI",
+}
+
+// serviceAddrRe matches values that look like a Kubernetes service DNS name
+// followed by a port, e.g. "user-db:27017", "redis-cart:6379".
+// Valid K8s service names: lowercase alphanumeric + hyphens, 1-63 chars.
+var serviceAddrRe = regexp.MustCompile(`^[a-z][a-z0-9-]{0,62}:\d{2,5}$`)
 
 type K8sDocFacts struct {
 	ManifestName string
@@ -93,11 +112,8 @@ func ParseK8sYAMLForFacts(doc []byte, sourcePath string) ([]K8sDocFacts, error) 
 						ManifestKind: facts.ManifestKind,
 						ManifestName: facts.ManifestName,
 					})
-					if strings.HasSuffix(k, "_SERVICE") || strings.HasSuffix(k, "_SERVICE_HOST") {
-						dep := normalizeServiceName(val)
-						if dep != "" {
-							facts.Dependencies = append(facts.Dependencies, dep)
-						}
+					if dep := extractDep(k, val); dep != "" {
+						facts.Dependencies = append(facts.Dependencies, dep)
 					}
 				}
 			}
@@ -257,6 +273,50 @@ func dedupe(in []string) []string {
 		out = append(out, s)
 	}
 	return out
+}
+
+// extractDep returns a dependency service name if the given env var (key+value)
+// looks like a reference to another Kubernetes service. Returns "" if no
+// dependency is detected.
+//
+// Detection rules (documented per spec requirement):
+//
+//  1. Env var name ends with a known dependency suffix (_SERVICE, _SERVICE_HOST,
+//     _ADDR, _HOST, _URL, _ENDPOINT, _URI). The value is normalized to extract
+//     the service hostname.
+//  2. Env var value matches hostname:port pattern (e.g. "redis-cart:6379"),
+//     indicating a direct service reference regardless of the env var name.
+//  3. Env var value contains ".svc.cluster.local", indicating an explicit
+//     in-cluster service FQDN reference.
+func extractDep(envKey, envVal string) string {
+	// Rule 1: suffix-based detection
+	for _, suffix := range depSuffixes {
+		if strings.HasSuffix(envKey, suffix) {
+			dep := normalizeServiceName(envVal)
+			if dep != "" {
+				return dep
+			}
+		}
+	}
+
+	// Rule 3: explicit cluster FQDN in value (check before hostname:port to
+	// get the more specific match).
+	if strings.Contains(envVal, ".svc.cluster.local") {
+		dep := normalizeServiceName(envVal)
+		if dep != "" {
+			return dep
+		}
+	}
+
+	// Rule 2: value looks like hostname:port
+	if serviceAddrRe.MatchString(envVal) {
+		dep := normalizeServiceName(envVal)
+		if dep != "" {
+			return dep
+		}
+	}
+
+	return ""
 }
 
 func normalizeServiceName(v string) string {

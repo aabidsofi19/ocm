@@ -55,6 +55,11 @@ type Options struct {
 	// ConfigExtensions lists file extensions considered as "configuration".
 	// Default: [".yaml", ".yml", ".json", ".toml", ".env", ".properties", ".conf"]
 	ConfigExtensions []string
+	// FileToService maps relative file paths to service names. When set,
+	// this takes precedence over the default directory-based heuristic.
+	// This allows correct mapping when service names come from metadata.name
+	// rather than directory structure.
+	FileToService map[string]string
 }
 
 func (o *Options) setDefaults() {
@@ -85,6 +90,31 @@ func ExtractChangeFacts(opts Options) (map[string]*ServiceChangeFacts, error) {
 	// Check that git is available.
 	if _, err := exec.LookPath("git"); err != nil {
 		return nil, nil // git not available; best-effort
+	}
+
+	// Detect the git repository root so we can map git-root-relative paths
+	// to scan-root-relative paths (used for FileToService lookup).
+	gitRoot := ""
+	{
+		cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+		cmd.Dir = opts.RepoPath
+		out, err := cmd.Output()
+		if err == nil {
+			gitRoot = strings.TrimSpace(string(out))
+		}
+	}
+	// Compute the prefix that converts git-root-relative paths to
+	// scan-root-relative paths. E.g., if git root is "/repo" and
+	// RepoPath is "/repo/kubernetes-manifests", prefix = "kubernetes-manifests/".
+	var scanPrefix string
+	if gitRoot != "" {
+		absRepo, err := filepath.Abs(opts.RepoPath)
+		if err == nil {
+			rel, err := filepath.Rel(gitRoot, absRepo)
+			if err == nil && rel != "." && rel != "" {
+				scanPrefix = rel + "/"
+			}
+		}
 	}
 
 	now := opts.Now()
@@ -132,11 +162,33 @@ func ExtractChangeFacts(opts Options) (map[string]*ServiceChangeFacts, error) {
 			if !extSet[ext] {
 				continue
 			}
-			parts := strings.SplitN(f, "/", 2)
-			if len(parts) == 0 || parts[0] == "" {
-				continue
+			// Use FileToService map if available; fall back to dir heuristic.
+			// Git log returns paths relative to git root, but FileToService
+			// keys are relative to the scan root (which may be a subdirectory).
+			// Strip the scanPrefix to convert git-root-relative → scan-root-relative.
+			svcName := ""
+			if opts.FileToService != nil {
+				lookupPath := f
+				if scanPrefix != "" {
+					if strings.HasPrefix(f, scanPrefix) {
+						lookupPath = strings.TrimPrefix(f, scanPrefix)
+					} else {
+						// File is outside the scan directory; skip for FileToService lookup.
+						lookupPath = ""
+					}
+				}
+				if lookupPath != "" {
+					svcName = opts.FileToService[lookupPath]
+				}
 			}
-			svcName := parts[0]
+			if svcName == "" {
+				// Fallback: first path component (dir heuristic).
+				parts := strings.SplitN(f, "/", 2)
+				if len(parts) == 0 || parts[0] == "" {
+					continue
+				}
+				svcName = parts[0]
+			}
 			touched[svcName] = true
 		}
 		for svc := range touched {

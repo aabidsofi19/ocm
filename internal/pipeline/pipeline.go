@@ -48,16 +48,16 @@ func (p *Pipeline) Run(ctx context.Context) (model.AnalysisResult, error) {
 
 	res := model.AnalysisResult{RunAt: p.opts.Now().UTC(), RepoPath: p.opts.RepoPath}
 
-	services, warnings, err := p.discoverAndParse()
+	services, fileToService, warnings, err := p.discoverAndParse()
 	if err != nil {
 		return model.AnalysisResult{}, err
 	}
 	res.Warnings = warnings
 
 	// DD computed from extracted dependency graph; CSA from config facts.
-	dd := computeDD(services)
+	dd, ddEvidence := computeDD(services)
 	db, dbEvidence := computeDB(services)
-	cdr, cdrEvidence := computeCDR(p.opts.RepoPath, services)
+	cdr, cdrEvidence := computeCDR(p.opts.RepoPath, services, fileToService)
 
 	// CV: Change Volatility via Git history.
 	cvWindow := p.opts.CVWindow
@@ -65,9 +65,10 @@ func (p *Pipeline) Run(ctx context.Context) (model.AnalysisResult, error) {
 		cvWindow = gitlog.DefaultWindow
 	}
 	changeFacts, err := gitlog.ExtractChangeFacts(gitlog.Options{
-		RepoPath: p.opts.RepoPath,
-		Window:   cvWindow,
-		Now:      p.opts.Now,
+		RepoPath:      p.opts.RepoPath,
+		Window:        cvWindow,
+		Now:           p.opts.Now,
+		FileToService: fileToService,
 	})
 	if err != nil {
 		res.Warnings = append(res.Warnings, fmt.Sprintf("git history: %v", err))
@@ -107,6 +108,9 @@ func (p *Pipeline) Run(ctx context.Context) (model.AnalysisResult, error) {
 		if services[i].Evidence == nil {
 			services[i].Evidence = map[model.MetricType][]model.EvidenceItem{}
 		}
+		if ev, ok := ddEvidence[services[i].Name]; ok && len(ev) > 0 {
+			services[i].Evidence[model.MetricDD] = ev
+		}
 		if ev, ok := dbEvidence[services[i].Name]; ok && len(ev) > 0 {
 			services[i].Evidence[model.MetricDB] = ev
 		}
@@ -145,14 +149,15 @@ func (p *Pipeline) Run(ctx context.Context) (model.AnalysisResult, error) {
 // discoverAndParse implements a best-effort Kubernetes YAML scan.
 // MVP behavior: treat each directory containing manifests as a service (dir strategy).
 // Dependency extraction is heuristic: env vars ending with _SERVICE / _SERVICE_HOST are treated as a dependency.
-func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, error) {
+// Returns: services, file-to-service map (relative path → service name), warnings, error.
+func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, map[string]string, []string, error) {
 	root := p.opts.RepoPath
 	info, err := os.Stat(root)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if !info.IsDir() {
-		return nil, nil, fmt.Errorf("repo path is not a directory: %s", root)
+		return nil, nil, nil, fmt.Errorf("repo path is not a directory: %s", root)
 	}
 
 	var warnings []string
@@ -164,6 +169,7 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 		fe       float64 // Failure Exposure: exposed endpoints + external integrations
 		deps     map[string]struct{}
 		evidence map[model.MetricType][]model.EvidenceItem
+		files    []string // source file paths (relative to repo root)
 		srcs     int
 		parse    int
 	}
@@ -229,9 +235,11 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 			warnings = append(warnings, fmt.Sprintf("read error: %s: %v", path, err))
 			return nil
 		}
+		relPath, _ := filepath.Rel(root, path)
 		serviceName := serviceNameFromPath(path)
 		acc := maybeAdd(serviceName)
 		acc.srcs++
+		acc.files = append(acc.files, relPath)
 		facts, perr := parser.ParseK8sYAMLForFacts(b, path)
 		if perr != nil {
 			warnings = append(warnings, fmt.Sprintf("parse warning: %s: %v", path, perr))
@@ -289,16 +297,18 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 				}
 				macc.srcs += acc.srcs
 				macc.parse += acc.parse
+				macc.files = append(macc.files, acc.files...)
 				delete(byService, acc.name)
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, warnings, err
+		return nil, nil, warnings, err
 	}
 
 	var out []model.AnalysisServiceResult
+	fts := map[string]string{} // file-to-service mapping
 	for _, acc := range byService {
 		m := map[model.MetricType]float64{
 			model.MetricCSA: acc.csa,
@@ -311,11 +321,14 @@ func (p *Pipeline) discoverAndParse() ([]model.AnalysisServiceResult, []string, 
 			Metrics:      m,
 			Evidence:     acc.evidence,
 		})
+		for _, f := range acc.files {
+			fts[f] = acc.name
+		}
 	}
 	if len(out) == 0 {
 		warnings = append(warnings, "no Kubernetes YAML manifests found; MVP parser currently scans *.yml/*.yaml")
 	}
-	return out, warnings, nil
+	return out, fts, warnings, nil
 }
 
 func normalize(services []model.AnalysisServiceResult, metric model.MetricType) map[string]float64 {
@@ -378,7 +391,7 @@ func normalize(services []model.AnalysisServiceResult, metric model.MetricType) 
 //
 // If a service has YAML files in N environments, each unique file basename that
 // appears in more than one environment contributes (occurrences - 1) overrides.
-func computeCDR(repoPath string, services []model.AnalysisServiceResult) (map[string]float64, map[string][]model.EvidenceItem) {
+func computeCDR(repoPath string, services []model.AnalysisServiceResult, fileToService map[string]string) (map[string]float64, map[string][]model.EvidenceItem) {
 	cdr := map[string]float64{}
 	evidence := map[string][]model.EvidenceItem{}
 
@@ -426,20 +439,27 @@ func computeCDR(repoPath string, services []model.AnalysisServiceResult) (map[st
 			if err != nil {
 				return nil
 			}
-			// Check if this file belongs to this service's directory tree.
-			parts := strings.Split(rel, string(filepath.Separator))
-			if len(parts) == 0 {
-				return nil
+			// Check if this file belongs to this service.
+			// Use fileToService map if available; fall back to dir heuristic.
+			owner := ""
+			if fileToService != nil {
+				owner = fileToService[rel]
 			}
-			// Service association: first directory component must match service name
-			// (same heuristic as the "dir" strategy).
-			if parts[0] != svc.Name {
+			if owner == "" {
+				parts := strings.Split(rel, string(filepath.Separator))
+				if len(parts) == 0 {
+					return nil
+				}
+				owner = parts[0]
+			}
+			if owner != svc.Name {
 				return nil
 			}
 
 			// Find environment indicator in path components.
 			detectedEnv := ""
-			for _, part := range parts {
+			pathParts := strings.Split(rel, string(filepath.Separator))
+			for _, part := range pathParts {
 				lower := strings.ToLower(part)
 				if envPatterns[lower] {
 					detectedEnv = lower
@@ -565,7 +585,7 @@ func computeDB(services []model.AnalysisServiceResult) (map[string]int, map[stri
 	return db, evidence
 }
 
-func computeDD(services []model.AnalysisServiceResult) map[string]int {
+func computeDD(services []model.AnalysisServiceResult) (map[string]int, map[string][]model.EvidenceItem) {
 	adj := map[string][]string{}
 	for _, s := range services {
 		adj[s.Name] = nil
@@ -588,6 +608,8 @@ func computeDD(services []model.AnalysisServiceResult) map[string]int {
 	// SCC-condense into DAG and compute longest path (edges) from each SCC.
 	compID, comps := tarjanSCC(adj)
 	compAdj := map[int][]int{}
+	// Track which edges connect components (for path reconstruction).
+	compEdgeLabel := map[[2]int]string{} // [from, to] component IDs → representative node name
 	for u, vs := range adj {
 		cu := compID[u]
 		for _, v := range vs {
@@ -596,27 +618,32 @@ func computeDD(services []model.AnalysisServiceResult) map[string]int {
 				continue
 			}
 			compAdj[cu] = append(compAdj[cu], cv)
+			compEdgeLabel[[2]int{cu, cv}] = v
 		}
 	}
 	for c := range comps {
 		compAdj[c] = dedupeInt(compAdj[c])
 	}
 
-	// DP on DAG.
+	// DP on DAG — also track the longest path for evidence.
 	cache := map[int]int{}
+	pathNext := map[int]int{} // component → next component on longest path (-1 = terminal)
 	var dfs func(int) int
 	dfs = func(c int) int {
 		if v, ok := cache[c]; ok {
 			return v
 		}
 		best := 0
+		bestNext := -1
 		for _, n := range compAdj[c] {
 			cand := 1 + dfs(n)
 			if cand > best {
 				best = cand
+				bestNext = n
 			}
 		}
 		cache[c] = best
+		pathNext[c] = bestNext
 		return best
 	}
 
@@ -624,7 +651,58 @@ func computeDD(services []model.AnalysisServiceResult) map[string]int {
 	for node := range adj {
 		dd[node] = dfs(compID[node])
 	}
-	return dd
+
+	// Build evidence: for each node, reconstruct the longest dependency chain.
+	// Pick a representative node name from each SCC for labeling.
+	compRepresentative := map[int]string{}
+	for node, cid := range compID {
+		if _, ok := compRepresentative[cid]; !ok {
+			compRepresentative[cid] = node
+		}
+	}
+
+	evidence := map[string][]model.EvidenceItem{}
+	for node := range adj {
+		depth := dd[node]
+		if depth == 0 {
+			continue // no chain to report
+		}
+		// Walk the longest path from this node's component.
+		var chain []string
+		chain = append(chain, node)
+		cur := compID[node]
+		for {
+			next := pathNext[cur]
+			if next < 0 {
+				break
+			}
+			// Use the edge label to show which dependency was followed,
+			// falling back to the component representative.
+			label := compEdgeLabel[[2]int{cur, next}]
+			if label == "" {
+				label = compRepresentative[next]
+			}
+			chain = append(chain, label)
+			cur = next
+		}
+		evidence[node] = append(evidence[node], model.EvidenceItem{
+			MetricType: model.MetricDD,
+			Component:  "dep_chain",
+			Key:        fmt.Sprintf("depth=%d", depth),
+			Value:      strings.Join(chain, " -> "),
+		})
+		// Also list direct dependencies as individual evidence items.
+		for _, dep := range adj[node] {
+			evidence[node] = append(evidence[node], model.EvidenceItem{
+				MetricType: model.MetricDD,
+				Component:  "direct_dep",
+				Key:        dep,
+				Value:      fmt.Sprintf("%s depends on %s", node, dep),
+			})
+		}
+	}
+
+	return dd, evidence
 }
 
 func mapKeys(m map[string]struct{}) []string {

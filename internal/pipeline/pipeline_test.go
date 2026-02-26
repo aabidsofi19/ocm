@@ -17,7 +17,7 @@ func TestComputeDD_CycleHandledDeterministically(t *testing.T) {
 		{Name: "c", Dependencies: nil, Metrics: map[model.MetricType]float64{model.MetricCSA: 1}},
 	}
 
-	dd := computeDD(services)
+	dd, ddEvidence := computeDD(services)
 	if dd["a"] != 1 {
 		// a and b are in one SCC; longest path out to c should be 1 edge.
 		t.Fatalf("expected dd[a]=1, got %d", dd["a"])
@@ -27,6 +27,17 @@ func TestComputeDD_CycleHandledDeterministically(t *testing.T) {
 	}
 	if dd["c"] != 0 {
 		t.Fatalf("expected dd[c]=0, got %d", dd["c"])
+	}
+	// a and b have depth > 0, so they should have evidence
+	if len(ddEvidence["a"]) == 0 {
+		t.Fatal("expected DD evidence for service a")
+	}
+	if len(ddEvidence["b"]) == 0 {
+		t.Fatal("expected DD evidence for service b")
+	}
+	// c has depth 0, no evidence expected
+	if len(ddEvidence["c"]) != 0 {
+		t.Fatalf("expected no DD evidence for service c, got %d items", len(ddEvidence["c"]))
 	}
 }
 
@@ -281,7 +292,7 @@ func TestAllMetricsInComposite(t *testing.T) {
 	}
 
 	// Compute DD and DB manually to verify integration.
-	dd := computeDD(services)
+	dd, _ := computeDD(services)
 	db, _ := computeDB(services)
 
 	if dd["svc1"] != 1 {

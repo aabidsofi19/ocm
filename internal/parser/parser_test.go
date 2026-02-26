@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"sort"
 	"testing"
 )
 
@@ -177,5 +178,207 @@ spec:
 	f := facts[0]
 	if f.ExposedEndpoints != 0 {
 		t.Fatalf("ClusterIP should have 0 exposed endpoints, got %d", f.ExposedEndpoints)
+	}
+}
+
+// ── Dependency extraction tests ──
+
+func TestDep_ServiceSuffix(t *testing.T) {
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: DB_SERVICE
+              value: "postgres"
+            - name: CACHE_SERVICE_HOST
+              value: "redis"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	sort.Strings(deps)
+	if len(deps) != 2 {
+		t.Fatalf("expected 2 deps, got %d: %v", len(deps), deps)
+	}
+	if deps[0] != "postgres" || deps[1] != "redis" {
+		t.Fatalf("expected [postgres redis], got %v", deps)
+	}
+}
+
+func TestDep_AddrSuffix(t *testing.T) {
+	// Google Online Boutique pattern: PRODUCT_CATALOG_SERVICE_ADDR=productcatalogservice:3550
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout
+spec:
+  template:
+    spec:
+      containers:
+        - name: checkout
+          env:
+            - name: PRODUCT_CATALOG_SERVICE_ADDR
+              value: "productcatalogservice:3550"
+            - name: CART_SERVICE_ADDR
+              value: "cartservice:7070"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	sort.Strings(deps)
+	if len(deps) != 2 {
+		t.Fatalf("expected 2 deps, got %d: %v", len(deps), deps)
+	}
+	if deps[0] != "cartservice" || deps[1] != "productcatalogservice" {
+		t.Fatalf("expected [cartservice productcatalogservice], got %v", deps)
+	}
+}
+
+func TestDep_HostSuffix(t *testing.T) {
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: DB_HOST
+              value: "postgres:5432"
+            - name: REDIS_HOST
+              value: "redis"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	sort.Strings(deps)
+	if len(deps) != 2 {
+		t.Fatalf("expected 2 deps, got %d: %v", len(deps), deps)
+	}
+	if deps[0] != "postgres" || deps[1] != "redis" {
+		t.Fatalf("expected [postgres redis], got %v", deps)
+	}
+}
+
+func TestDep_URLSuffix(t *testing.T) {
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: API_URL
+              value: "http://api-gateway:8080/v1"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	if len(deps) != 1 || deps[0] != "api-gateway" {
+		t.Fatalf("expected [api-gateway], got %v", deps)
+	}
+}
+
+func TestDep_HostnamePortValue(t *testing.T) {
+	// Sock Shop pattern: bare env var name with hostname:port value
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user
+spec:
+  template:
+    spec:
+      containers:
+        - name: user
+          env:
+            - name: mongo
+              value: "user-db:27017"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	if len(deps) != 1 || deps[0] != "user-db" {
+		t.Fatalf("expected [user-db], got %v", deps)
+	}
+}
+
+func TestDep_ClusterLocalFQDN(t *testing.T) {
+	// Sock Shop pattern: ZIPKIN=zipkin.jaeger.svc.cluster.local
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping
+spec:
+  template:
+    spec:
+      containers:
+        - name: shipping
+          env:
+            - name: ZIPKIN
+              value: "zipkin.jaeger.svc.cluster.local"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	deps := facts[0].Dependencies
+	if len(deps) != 1 || deps[0] != "zipkin" {
+		t.Fatalf("expected [zipkin], got %v", deps)
+	}
+}
+
+func TestDep_NoDeps_PlainString(t *testing.T) {
+	// Plain string values that are NOT service references should not produce deps
+	yaml := `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: LOG_LEVEL
+              value: "debug"
+            - name: JAVA_OPTS
+              value: "-Xmx512m"
+            - name: SESSION_REDIS
+              value: "true"
+`
+	facts, err := ParseK8sYAMLForFacts([]byte(yaml), "test.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(facts[0].Dependencies) != 0 {
+		t.Fatalf("expected 0 deps for plain values, got %v", facts[0].Dependencies)
 	}
 }
