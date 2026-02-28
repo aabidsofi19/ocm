@@ -4,41 +4,50 @@
 #import "@preview/polylux:0.4.0": *
 
 #set page(paper: "presentation-16-9")
-#set text(size: 20pt, font: "Inter")
+#set text(size: 20pt, font: ("Inter", "Inter Variable"))
 
-// ─── Color palette (matches dashboard design tokens) ───
-#let bg      = rgb("#0a0d12")
-#let surface = rgb("#111318")
-#let raised  = rgb("#181b22")
-#let border  = rgb("#2a2e38")
-#let txt     = rgb("#f0f0f3")
-#let txt2    = rgb("#9198a1")
-#let txt3    = rgb("#6b727d")
+// ─── Color palette ───
+#let bg      = rgb("#0c1017")
+#let surface = rgb("#12161e")
+#let raised  = rgb("#1a1f2b")
+#let hover   = rgb("#222836")
+#let border  = rgb("#2d3343")
+#let txt     = rgb("#eef0f4")
+#let txt2    = rgb("#8b93a1")
+#let txt3    = rgb("#5f6878")
 #let accent  = rgb("#635bff")
+#let accent2 = rgb("#818cf8")
 #let csa-c   = rgb("#635bff")
 #let dd-c    = rgb("#0ea5e9")
 #let db-c    = rgb("#8b5cf6")
 #let cv-c    = rgb("#f59e0b")
 #let fe-c    = rgb("#ef4444")
 #let cdr-c   = rgb("#10b981")
+#let success = rgb("#10b981")
 
 // ─── Reusable helpers ───
+#let slide-footer() = place(bottom + right, dx: -24pt, dy: -12pt,
+  text(size: 10pt, fill: txt3)[OCM — Phase 3]
+)
+
 #let title-slide(title, subtitle) = slide[
   #set page(fill: bg)
   #set text(fill: txt)
   #set align(horizon + center)
   #block(width: 100%)[
-    #text(size: 18pt, fill: accent, weight: 600, tracking: 0.12em)[STUDY PROJECT — PHASE 3]
-    #v(12pt)
-    #text(size: 44pt, weight: 700)[#title]
-    #v(8pt)
-    #text(size: 20pt, fill: txt2)[#subtitle]
-    #v(24pt)
-    #line(length: 120pt, stroke: 1.5pt + accent)
-    #v(16pt)
-    #text(size: 14pt, fill: txt3)[
-      Aabid Ali Sofi #h(12pt) | #h(12pt) 2023EBCS041 \
-      Advisor: Preethy P Johny #h(12pt) | #h(12pt) Feb 2026
+    #box(fill: accent.lighten(88%), radius: 20pt, inset: (x: 14pt, y: 6pt))[
+      #text(size: 12pt, fill: accent, weight: 700, tracking: 0.15em)[STUDY PROJECT — PHASE 3]
+    ]
+    #v(18pt)
+    #text(size: 48pt, weight: 800, tracking: -0.02em)[#title]
+    #v(6pt)
+    #text(size: 21pt, fill: txt2, weight: 400)[#subtitle]
+    #v(28pt)
+    #line(length: 100pt, stroke: 2pt + accent)
+    #v(18pt)
+    #text(size: 14pt, fill: txt3, weight: 500)[
+      Aabid Ali Sofi #h(16pt) | #h(16pt) 2023EBCS041 \
+      Advisor: Preethy P Johny #h(16pt) | #h(16pt) Feb 2026
     ]
   ]
 ]
@@ -48,31 +57,81 @@
   #set text(fill: txt)
   #set align(horizon + center)
   #block(width: 100%)[
-    #text(size: 14pt, fill: accent, weight: 600, tracking: 0.1em)[SECTION]
-    #v(8pt)
-    #text(size: 38pt, weight: 700)[#title]
-    #v(12pt)
-    #line(length: 80pt, stroke: 1.5pt + accent)
+    #box(fill: accent.lighten(88%), radius: 16pt, inset: (x: 12pt, y: 5pt))[
+      #text(size: 11pt, fill: accent, weight: 700, tracking: 0.12em)[SECTION]
+    ]
+    #v(10pt)
+    #text(size: 42pt, weight: 800, tracking: -0.02em)[#title]
+    #v(14pt)
+    #line(length: 70pt, stroke: 2pt + accent)
   ]
+  #slide-footer()
 ]
 
 #let content-slide(title, body) = slide[
   #set page(fill: bg)
   #set text(fill: txt)
-  #v(8pt)
-  #text(size: 28pt, weight: 700)[#title]
+  #v(4pt)
+  #text(size: 30pt, weight: 700, tracking: -0.01em)[#title]
   #v(4pt)
   #line(length: 100%, stroke: 0.5pt + border)
-  #v(8pt)
+  #v(10pt)
   #text(size: 17pt, fill: txt2)[#body]
+  #slide-footer()
 ]
 
 #let metric-pill(label, color) = box(
   fill: color.lighten(85%),
-  radius: 4pt,
-  inset: (x: 8pt, y: 3pt),
-  text(size: 13pt, weight: 600, fill: color)[#label]
+  radius: 6pt,
+  inset: (x: 10pt, y: 4pt),
+  text(size: 13pt, weight: 700, fill: color)[#label]
 )
+
+#let callout(body, color: accent) = align(center)[
+  #block(
+    fill: color.lighten(92%),
+    radius: 10pt,
+    inset: (x: 20pt, y: 12pt),
+    width: auto,
+    stroke: 0.5pt + color.lighten(70%),
+  )[
+    #text(fill: color, weight: 600, size: 16pt)[#body]
+  ]
+]
+
+#let step-list(color: accent, items) = {
+  grid(
+    columns: (auto, 1fr),
+    column-gutter: 14pt,
+    row-gutter: 12pt,
+    ..items.enumerate().map(((i, item)) => (
+      box(
+        fill: color.lighten(85%),
+        radius: 14pt,
+        width: 28pt, height: 28pt,
+        align(center + horizon, text(fill: color, weight: 800, size: 14pt)[#{i + 1}])
+      ),
+      align(horizon, item),
+    )).flatten()
+  )
+}
+
+#let screenshot-frame(path, caption: none) = {
+  align(center)[
+    #block(
+      radius: 10pt,
+      clip: true,
+      stroke: 0.5pt + border,
+    )[
+      #image(path)
+    ]
+    #if caption != none {
+      v(6pt)
+      text(size: 12pt, fill: txt3, style: "italic")[#caption]
+    }
+  ]
+}
+
 
 // ═══════════════════════════════════════════════════════
 //  SLIDES
@@ -89,21 +148,24 @@
   #set text(size: 18pt)
   #grid(
     columns: (1fr, 1fr),
-    column-gutter: 24pt,
+    column-gutter: 32pt,
     [
-      + Problem Statement
-      + What is OCM?
-      + The 6 Metrics
-      + System Architecture
-      + Pipeline Deep Dive
+      #step-list(color: accent, (
+        [Problem Statement],
+        [What is OCM?],
+        [The 6 Metrics],
+        [System Architecture],
+        [Pipeline Deep Dive],
+      ))
     ],
     [
-      6. Parser & Extraction
-      7. Graph Algorithms
-      8. Storage & API
-      9. Dashboard
-      10. Demo & Results
-      11. Future Work
+      #step-list(color: accent2, (
+        [Parser & Extraction],
+        [Graph Algorithms],
+        [Storage & API],
+        [Dashboard & Visualization],
+        [Demo, Results & Future Work],
+      ))
     ]
   )
 ]
@@ -115,34 +177,38 @@
   Modern distributed systems are *operationally complex*, but that complexity is
   rarely measured.
 
-  #v(12pt)
+  #v(10pt)
 
   #grid(
     columns: (1fr, 1fr),
-    column-gutter: 20pt,
+    column-gutter: 24pt,
     [
-      *Symptoms:*
-      - Hundreds of config parameters
-      - Deep dependency chains
-      - Frequent config changes
-      - Env-specific drift (dev vs prod)
-      - Exposed failure surfaces
+      #block(fill: raised, radius: 10pt, inset: 14pt, width: 100%)[
+        #text(fill: fe-c, weight: 700, size: 15pt)[Symptoms]
+        #v(6pt)
+        #set text(size: 16pt, fill: txt2)
+        - Hundreds of config parameters
+        - Deep dependency chains
+        - Frequent config changes
+        - Env-specific drift (dev vs prod)
+        - Exposed failure surfaces
+      ]
     ],
     [
-      *Impact:*
-      - Outages from config errors
-      - Slow incident response
-      - Hidden coupling between services
-      - Unmeasured toil & risk
+      #block(fill: raised, radius: 10pt, inset: 14pt, width: 100%)[
+        #text(fill: cv-c, weight: 700, size: 15pt)[Impact]
+        #v(6pt)
+        #set text(size: 16pt, fill: txt2)
+        - Outages from config errors
+        - Slow incident response
+        - Hidden coupling between services
+        - Unmeasured toil & risk
+      ]
     ]
   )
 
   #v(12pt)
-  #align(center)[
-    #box(fill: accent.lighten(90%), radius: 6pt, inset: 12pt)[
-      #text(fill: accent, weight: 600)[Can we quantify operational complexity as a single, measurable score?]
-    ]
-  ]
+  #callout[Can we quantify operational complexity as a single, measurable score?]
 ]
 
 // ─── 4. What is OCM? ───
@@ -155,26 +221,26 @@
 
   #v(8pt)
 
-  #grid(
-    columns: (auto, 1fr),
-    column-gutter: 12pt,
-    row-gutter: 10pt,
-    text(fill: accent, weight: 700)[1.], [*Scans* a Kubernetes YAML repository],
-    text(fill: accent, weight: 700)[2.], [*Identifies* services from directory structure or manifest metadata],
-    text(fill: accent, weight: 700)[3.], [*Computes* 6 operational complexity metrics per service],
-    text(fill: accent, weight: 700)[4.], [*Normalizes* and produces a composite OCM score (0–1)],
-    text(fill: accent, weight: 700)[5.], [*Stores* results in SQLite for time-series tracking],
-    text(fill: accent, weight: 700)[6.], [*Serves* an interactive web dashboard],
-  )
+  #step-list(color: accent, (
+    [*Scans* a Kubernetes YAML repository],
+    [*Identifies* services from directory structure or manifest metadata],
+    [*Computes* 6 operational complexity metrics per service],
+    [*Normalizes* and produces a composite OCM score (0--1)],
+    [*Stores* results in SQLite for time-series tracking],
+    [*Serves* an interactive web dashboard],
+  ))
 
   #v(12pt)
 
-  ```bash
-  go run ./cmd/ocm --repo /path/to/k8s-repo --db ocm.sqlite --port 8080
-  ```
+  #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+    #set text(size: 15pt, fill: txt2)
+    ```bash
+    go run ./cmd/ocm --repo /path/to/k8s-repo --db ocm.sqlite --port 8080
+    ```
+  ]
 
-  #v(6pt)
-  #text(size: 14pt, fill: txt3)[
+  #v(4pt)
+  #text(size: 13pt, fill: txt3, weight: 500)[
     No external dependencies. No K8s SDK. No CGO. Pure Go.
   ]
 ]
@@ -188,8 +254,8 @@
     columns: (auto, 1fr, 1fr),
     align: (left, left, left),
     stroke: 0.5pt + border,
-    inset: 8pt,
-    fill: (x, y) => if y == 0 { raised } else { none },
+    inset: 10pt,
+    fill: (x, y) => if y == 0 { raised } else if calc.odd(y) { surface } else { none },
 
     [*Metric*], [*What It Measures*], [*How*],
 
@@ -205,27 +271,45 @@
 #content-slide([Composite OCM Score])[
   #set text(size: 18pt)
 
-  *Normalization* — Min-max across the service cohort:
-
-  #v(6pt)
-  #align(center)[
-    $ "Normalized"(M) = (M - M_"min") / (M_"max" - M_"min") $
+  #block(fill: raised, radius: 10pt, inset: 16pt, width: 100%)[
+    #text(fill: accent2, weight: 700, size: 15pt)[Normalization]
+    #text(fill: txt2, size: 16pt)[ — Min-max across the service cohort:]
+    #v(8pt)
+    #align(center)[
+      $ "Normalized"(M) = (M - M_"min") / (M_"max" - M_"min") $
+    ]
   ]
 
-  #v(12pt)
+  #v(14pt)
 
-  *Composite Score* — Weighted sum of normalized metrics:
-
-  #v(6pt)
-  #align(center)[
-    $ "OCM" = 1/6 dot "CSA" + 1/6 dot "DD" + 1/6 dot "DB" + 1/6 dot "CV" + 1/6 dot "FE" + 1/6 dot "CDR" $
+  #block(fill: raised, radius: 10pt, inset: 16pt, width: 100%)[
+    #text(fill: accent, weight: 700, size: 15pt)[Composite Score]
+    #text(fill: txt2, size: 16pt)[ — Weighted sum of normalized metrics:]
+    #v(8pt)
+    #align(center)[
+      $ "OCM" = 1/6 dot "CSA" + 1/6 dot "DD" + 1/6 dot "DB" + 1/6 dot "CV" + 1/6 dot "FE" + 1/6 dot "CDR" $
+    ]
   ]
 
-  #v(12pt)
+  #v(14pt)
 
-  - Output range: *0.0* (minimal complexity) to *1.0* (maximum in cohort)
-  - Weights are *configurable* (default: equal 1/6 each)
-  - If max = min for a metric, normalized value = 0 (no variance)
+  #grid(
+    columns: (1fr, 1fr, 1fr),
+    column-gutter: 16pt,
+    align(center)[
+      #text(fill: success, weight: 700, size: 24pt)[0.0]
+      #v(2pt)
+      #text(fill: txt3, size: 13pt)[Minimal complexity]
+    ],
+    align(center)[
+      #text(fill: txt3, size: 13pt)[Weights are *configurable*\ (default: equal 1/6 each)]
+    ],
+    align(center)[
+      #text(fill: fe-c, weight: 700, size: 24pt)[1.0]
+      #v(2pt)
+      #text(fill: txt3, size: 13pt)[Maximum in cohort]
+    ],
+  )
 ]
 
 // ─── 6. Architecture ───
@@ -234,7 +318,7 @@
 #content-slide([Single-Binary Architecture])[
   #set text(size: 16pt)
   #align(center)[
-    #block(fill: raised, radius: 8pt, inset: 16pt, width: 90%)[
+    #block(fill: raised, radius: 10pt, inset: 16pt, width: 92%)[
       #text(size: 14pt, fill: txt2)[
         ```
         ┌─────────────────────────────────────────────────────────┐
@@ -256,43 +340,49 @@
     ]
   ]
 
-  #v(8pt)
+  #v(10pt)
   #grid(
     columns: (1fr, 1fr, 1fr),
-    column-gutter: 16pt,
-    [
-      *Only 2 dependencies:*
-      - `yaml.v3`
-      - `modernc.org/sqlite`
+    column-gutter: 12pt,
+    block(fill: surface, radius: 8pt, inset: 12pt, width: 100%)[
+      #text(fill: accent, weight: 700, size: 14pt)[2 Dependencies]
+      #v(4pt)
+      #text(fill: txt2, size: 14pt)[
+        `yaml.v3` \
+        `modernc.org/sqlite`
+      ]
     ],
-    [
-      *No CGO required* \
-      Pure Go SQLite driver \
-      Cross-compilable
+    block(fill: surface, radius: 8pt, inset: 12pt, width: 100%)[
+      #text(fill: dd-c, weight: 700, size: 14pt)[No CGO]
+      #v(4pt)
+      #text(fill: txt2, size: 14pt)[
+        Pure Go SQLite \
+        Cross-compilable
+      ]
     ],
-    [
-      *Embedded assets* \
-      `go:embed` for HTML/CSS/JS \
-      Zero external files
-    ]
+    block(fill: surface, radius: 8pt, inset: 12pt, width: 100%)[
+      #text(fill: cdr-c, weight: 700, size: 14pt)[Embedded Assets]
+      #v(4pt)
+      #text(fill: txt2, size: 14pt)[
+        `go:embed` HTML/CSS/JS \
+        Zero external files
+      ]
+    ],
   )
 ]
 
 #content-slide([Data Flow Pipeline])[
   #set text(size: 17pt)
-  #grid(
-    columns: (auto, 1fr),
-    column-gutter: 12pt,
-    row-gutter: 14pt,
-    text(fill: accent, weight: 700)[1.], [*Discovery* — Walk filesystem, collect `.yaml`/`.yml`, skip `.git`/`vendor`],
-    text(fill: accent, weight: 700)[2.], [*Parsing* — Multi-doc YAML decode, extract CSA facts + deps + FE signals],
-    text(fill: accent, weight: 700)[3.], [*Service ID* — Map files to services via `dir` (first path component) or `manifest` (metadata.name)],
-    text(fill: accent, weight: 700)[4.], [*Metric Engine* — Compute DD (graph), DB (degree), CV (git), FE (exposure), CDR (drift)],
-    text(fill: accent, weight: 700)[5.], [*Normalization* — Min-max across cohort for each metric],
-    text(fill: accent, weight: 700)[6.], [*Composite* — Weighted sum → single OCM score per service],
-    text(fill: accent, weight: 700)[7.], [*Persist* — Atomic transaction: services + metrics + evidence + scores → SQLite],
-    text(fill: accent, weight: 700)[8.], [*Serve* — HTTP API + embedded dashboard at `localhost:8080`],
-  )
+  #step-list(color: accent, (
+    [*Discovery* — Walk filesystem, collect `.yaml`/`.yml`, skip `.git`/`vendor`],
+    [*Parsing* — Multi-doc YAML decode, extract CSA facts + deps + FE signals],
+    [*Service ID* — Map files to services via `dir` or `manifest` (metadata.name)],
+    [*Metric Engine* — Compute DD (graph), DB (degree), CV (git), FE, CDR],
+    [*Normalization* — Min-max across cohort for each metric],
+    [*Composite* — Weighted sum to single OCM score per service],
+    [*Persist* — Atomic transaction: services + metrics + evidence to SQLite],
+    [*Serve* — HTTP API + embedded dashboard at `localhost:8080`],
+  ))
 ]
 
 // ─── 7. Parser Deep Dive ───
@@ -308,8 +398,8 @@
   #table(
     columns: (auto, 1fr, auto),
     stroke: 0.5pt + border,
-    inset: 8pt,
-    fill: (x, y) => if y == 0 { raised } else { none },
+    inset: 10pt,
+    fill: (x, y) => if y == 0 { raised } else if calc.odd(y) { surface } else { none },
     [*Component*], [*Source*], [*Count*],
     [`env`], [Container environment variables], [1 per var],
     [`port`], [Container port entries], [1 per port],
@@ -330,25 +420,36 @@
 
   #v(8pt)
 
-  *Rule 1 — Env var suffix matching:*
-  #text(size: 14pt)[
-    `_SERVICE`, `_SERVICE_HOST`, `_SERVICE_PORT`, `_ADDR`, `_HOST`, `_URL`, `_ENDPOINT`, `_URI`
+  #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+    #text(fill: dd-c, weight: 700, size: 14pt)[Rule 1 — Env var suffix matching]
+    #v(4pt)
+    #text(size: 14pt, fill: txt2)[
+      `_SERVICE`, `_SERVICE_HOST`, `_SERVICE_PORT`, `_ADDR`, `_HOST`, `_URL`, `_ENDPOINT`, `_URI`
+    ]
   ]
 
-  #v(6pt)
-  *Rule 2 — Cluster FQDN detection:*
-  #text(size: 14pt)[
-    Values containing `.svc.cluster.local` → extract service name
+  #v(8pt)
+
+  #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+    #text(fill: db-c, weight: 700, size: 14pt)[Rule 2 — Cluster FQDN detection]
+    #v(4pt)
+    #text(size: 14pt, fill: txt2)[
+      Values containing `.svc.cluster.local` — extract service name
+    ]
   ]
 
-  #v(6pt)
-  *Rule 3 — Hostname:port pattern:*
-  #text(size: 14pt)[
-    Regex: `^[a-z][a-z0-9-]{0,62}:\d{2,5}$` → extract hostname
+  #v(8pt)
+
+  #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+    #text(fill: cdr-c, weight: 700, size: 14pt)[Rule 3 — Hostname:port pattern]
+    #v(4pt)
+    #text(size: 14pt, fill: txt2)[
+      Regex: `^[a-z][a-z0-9-]{0,62}:\d{2,5}$` — extract hostname
+    ]
   ]
 
-  #v(12pt)
-  #text(size: 14pt, fill: txt3)[
+  #v(8pt)
+  #text(size: 13pt, fill: txt3, weight: 500)[
     Designed for real-world repos: Sock Shop, Google Online Boutique, Helm charts, Rails/Django/Spring deployments.
   ]
 ]
@@ -360,19 +461,16 @@
 
   #v(8pt)
 
-  #grid(
-    columns: (auto, 1fr),
-    column-gutter: 12pt,
-    row-gutter: 10pt,
-    text(fill: fe-c, weight: 700)[1.], [*LoadBalancer / NodePort* service types — each port = 1 endpoint],
-    text(fill: fe-c, weight: 700)[2.], [*Ingress* resources — each `rules[].http.paths[]` = 1 endpoint],
-    text(fill: fe-c, weight: 700)[3.], [*ExternalName* services — 1 external integration],
-    text(fill: fe-c, weight: 700)[4.], [*Container hostPort* — each hostPort = 1 endpoint],
-    text(fill: fe-c, weight: 700)[5.], [*External URLs* in env vars — `http(s)://` not containing `.svc.cluster.local`],
-  )
+  #step-list(color: fe-c, (
+    [*LoadBalancer / NodePort* service types — each port = 1 endpoint],
+    [*Ingress* resources — each `rules[].http.paths[]` = 1 endpoint],
+    [*ExternalName* services — 1 external integration],
+    [*Container hostPort* — each hostPort = 1 endpoint],
+    [*External URLs* in env vars — `http(s)://` not containing `.svc.cluster.local`],
+  ))
 
-  #v(12pt)
-  #text(size: 14pt, fill: txt3)[
+  #v(10pt)
+  #text(size: 13pt, fill: txt3, weight: 500)[
     Detection rules are explicitly documented in code per spec requirement.
   ]
 ]
@@ -387,40 +485,54 @@
 
   #v(8pt)
 
-  *Problem:* Dependency graphs may have cycles (A → B → A).
-
-  *Solution:* SCC (Strongly Connected Components) condensation:
-
-  #v(6pt)
-
   #grid(
     columns: (1fr, 1fr),
     column-gutter: 20pt,
     [
-      *Step 1:* Tarjan's algorithm finds SCCs \
-      *Step 2:* Condense each SCC to a single node \
-      *Step 3:* Result is a DAG (no cycles) \
-      *Step 4:* DFS with memoization → longest path
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: fe-c, weight: 700, size: 14pt)[Problem]
+        #v(4pt)
+        #text(fill: txt2, size: 15pt)[Dependency graphs may have cycles (A -> B -> A).]
+      ]
+
+      #v(10pt)
+
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: cdr-c, weight: 700, size: 14pt)[Solution — SCC Condensation]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        #step-list(color: dd-c, (
+          [Tarjan's algorithm finds SCCs],
+          [Condense each SCC to a single node],
+          [Result is a DAG (no cycles)],
+          [DFS with memoization -> longest path],
+        ))
+      ]
     ],
     [
-      *Example:*
-      ```
-      A → B → C    (B ↔ A = cycle)
-          ↑ ↙
-          A
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: dd-c, weight: 700, size: 14pt)[Example]
+        #v(6pt)
+        #text(fill: txt2, size: 14pt)[
+          ```
+          A → B → C    (B ↔ A = cycle)
+              ↑ ↙
+              A
 
-      SCC: {A, B} → node S₁
-      DAG: S₁ → C
-      DD[A] = DD[B] = 1
-      DD[C] = 0
-      ```
+          SCC: {A, B} → node S₁
+          DAG: S₁ → C
+          DD[A] = DD[B] = 1
+          DD[C] = 0
+          ```
+        ]
+      ]
+
+      #v(8pt)
+      #text(size: 13pt, fill: txt3, weight: 500)[
+        Deterministic — same input always produces same DD values.
+      ]
     ]
   )
-
-  #v(8pt)
-  #text(size: 14pt, fill: txt3)[
-    Algorithm is deterministic — same input always produces same DD values.
-  ]
 ]
 
 // ─── 9. Storage & API ───
@@ -436,31 +548,42 @@
     columns: (1fr, 1fr),
     column-gutter: 16pt,
     [
-      *Core tables:*
-      ```sql
-      services(id, name, repository)
-        UNIQUE(name, repository)
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: accent, weight: 700, size: 14pt)[Core Tables]
+        #v(6pt)
+        #text(fill: txt2, size: 14pt)[
+          ```sql
+          services(id, name, repository)
+            UNIQUE(name, repository)
 
-      metrics(id, service_id,
-        metric_type, metric_value,
-        timestamp)
+          metrics(id, service_id,
+            metric_type, metric_value,
+            timestamp)
 
-      composite_scores(id, service_id,
-        ocm_score, timestamp)
-      ```
+          composite_scores(id, service_id,
+            ocm_score, timestamp)
+          ```
+        ]
+      ]
     ],
     [
-      *Evidence table:*
-      ```sql
-      metric_evidence(id, service_id,
-        metric_type, component,
-        evidence_key, evidence_value,
-        source_path,
-        manifest_kind, manifest_name,
-        timestamp)
-      ```
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: cdr-c, weight: 700, size: 14pt)[Evidence Table]
+        #v(6pt)
+        #text(fill: txt2, size: 14pt)[
+          ```sql
+          metric_evidence(id, service_id,
+            metric_type, component,
+            evidence_key, evidence_value,
+            source_path,
+            manifest_kind, manifest_name,
+            timestamp)
+          ```
+        ]
+      ]
 
       #v(6pt)
+      #set text(size: 14pt, fill: txt2)
       - FK constraints with `PRAGMA foreign_keys`
       - Indexes on `(service_id, metric_type, timestamp)`
       - Upsert for idempotent re-runs
@@ -474,8 +597,8 @@
   #table(
     columns: (1fr, 1fr),
     stroke: 0.5pt + border,
-    inset: 8pt,
-    fill: (x, y) => if y == 0 { raised } else { none },
+    inset: 10pt,
+    fill: (x, y) => if y == 0 { raised } else if calc.odd(y) { surface } else { none },
     [*Endpoint*], [*Returns*],
     [`GET /api/healthz`], [Health check],
     [`GET /api/services`], [List all analyzed services],
@@ -485,162 +608,217 @@
     [`GET /api/services/{id}/metrics/{type}/evidence`], [Evidence items for latest run],
   )
 
-  #v(8pt)
-  - Built with Go 1.22 `http.ServeMux` (method + path pattern matching)
-  - All responses are JSON with proper `Content-Type`
-  - CORS enabled for local development
+  #v(10pt)
+  #grid(
+    columns: (1fr, 1fr, 1fr),
+    column-gutter: 12pt,
+    block(fill: surface, radius: 8pt, inset: 10pt, width: 100%)[
+      #text(fill: txt3, size: 13pt)[Go 1.22 `http.ServeMux` \ method + path patterns]
+    ],
+    block(fill: surface, radius: 8pt, inset: 10pt, width: 100%)[
+      #text(fill: txt3, size: 13pt)[JSON responses \ proper `Content-Type`]
+    ],
+    block(fill: surface, radius: 8pt, inset: 10pt, width: 100%)[
+      #text(fill: txt3, size: 13pt)[CORS enabled \ for local development]
+    ],
+  )
 ]
 
 // ─── 10. Dashboard ───
 #section-slide([Dashboard])
 
+#content-slide([Dashboard — Repository Overview])[
+  #set text(size: 15pt)
+
+  #screenshot-frame("screenshots/dashboard-overview.png",
+    caption: [Repository overview showing composite OCM score, 9 analyzed services, and the 6 metric breakdown tiles]
+  )
+]
+
+#content-slide([Dashboard — Service Detail])[
+  #set text(size: 15pt)
+
+  #screenshot-frame("screenshots/dashboard-service-tall.png",
+    caption: [Single service view: individual metrics, OCM score trend, radar chart, and bar chart for the `api` service]
+  )
+]
+
+#content-slide([Dashboard — Service Comparison])[
+  #set text(size: 15pt)
+
+  #screenshot-frame("screenshots/dashboard-services-table.png",
+    caption: [All 9 services compared side-by-side with raw metric values and composite OCM scores]
+  )
+]
+
+#content-slide([Dashboard — Evidence Drill-Down])[
+  #set text(size: 15pt)
+
+  #screenshot-frame("screenshots/dashboard-evidence.png",
+    caption: [CSA evidence modal for the `api` service — 25 configuration contributors with source traceability]
+  )
+]
+
 #content-slide([Dashboard Design])[
   #set text(size: 16pt)
 
-  Stripe-inspired dark theme with responsive layout:
-
-  #v(8pt)
-
   #grid(
     columns: (1fr, 1fr),
-    column-gutter: 20pt,
+    column-gutter: 24pt,
     [
-      *Repo Overview:*
-      - Composite OCM average across all services
-      - 6 metric tiles with aggregated values
-      - Service count and API status
-
-      *Service Overview:*
-      - Individual service metrics
-      - OCM score trend chart (Canvas)
-      - Radar chart (normalized profile)
-      - Bar chart (raw values)
-      - Sparklines in metric tiles
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: accent, weight: 700, size: 14pt)[Views & Visualizations]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - Composite OCM score hero card
+        - 6 metric tiles with color coding
+        - OCM score trend chart (Canvas)
+        - Radar chart (normalized profile)
+        - Bar chart (raw metric values)
+        - Service comparison table
+        - Evidence drill-down modal
+      ]
     ],
     [
-      *Interactive features:*
-      - Sidebar service selector
-      - "All Services" ↔ single-service toggle
-      - Evidence drill-down modal per metric
-      - Service comparison table
-      - Responsive (mobile, tablet, desktop)
-
-      *Tech:*
-      - Pure HTML/CSS/JS (no frameworks)
-      - Canvas-based charts
-      - Embedded via `go:embed`
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: cdr-c, weight: 700, size: 14pt)[Technical Implementation]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - Stripe-inspired dark design system
+        - Pure HTML/CSS/JS (no frameworks)
+        - Canvas-based chart rendering
+        - Responsive layout (mobile to desktop)
+        - Embedded via `go:embed`
+        - Sidebar with live service selector
+        - All Services vs individual service toggle
+      ]
     ]
   )
 ]
 
 // ─── 11. Evidence Traceability ───
 #content-slide([Evidence-Based Traceability])[
-  #set text(size: 16pt)
+  #set text(size: 15pt)
 
   Every metric contribution is tracked with provenance:
 
-  #v(8pt)
+  #v(6pt)
 
   #table(
     columns: (auto, 1fr, 1fr),
     stroke: 0.5pt + border,
-    inset: 8pt,
-    fill: (x, y) => if y == 0 { raised } else { none },
+    inset: 9pt,
+    fill: (x, y) => if y == 0 { raised } else if calc.odd(y) { surface } else { none },
     [*Metric*], [*Evidence Type*], [*Example*],
     [#metric-pill("CSA", csa-c)], [`env`, `port`, `resource`, `replica`], [`PORT=8080` from `api/deploy.yaml`],
-    [#metric-pill("DD", dd-c)], [`dep_chain`, `direct_dep`], [`api → cache → db` (depth=2)],
-    [#metric-pill("DB", db-c)], [`upstream_dep`, `downstream_dep`], [`orders → payment` edge],
+    [#metric-pill("DD", dd-c)], [`dep_chain`, `direct_dep`], [`api -> cache -> db` (depth=2)],
+    [#metric-pill("DB", db-c)], [`upstream_dep`, `downstream_dep`], [`orders -> payment` edge],
     [#metric-pill("CV", cv-c)], [`commit`], [`commit abc12345`],
     [#metric-pill("FE", fe-c)], [`loadbalancer`, `ingress`, `external_url`], [LoadBalancer port 80],
     [#metric-pill("CDR", cdr-c)], [`env_override`], [`config.yaml` in 2 envs: dev, prod],
   )
 
-  #v(8pt)
-  Users can click any metric tile → modal shows exactly *what* contributed to the score and *where* it was found.
+  #v(6pt)
+  #callout(color: accent2)[Click any metric tile in the dashboard to see exactly *what* contributed and *where* it was found.]
 ]
 
 // ─── 12. Testing ───
 #section-slide([Testing & Validation])
 
 #content-slide([Test Suite])[
-  #set text(size: 17pt)
+  #set text(size: 16pt)
 
   #grid(
     columns: (1fr, 1fr),
     column-gutter: 20pt,
     [
-      *Pipeline tests:*
-      - DD cycle handling (Tarjan's SCC)
-      - DB in/out degree counting
-      - Self-dependency ignored
-      - Normalization edge cases (max = min)
-      - All 6 metrics present in output
-      - Composite score in \[0, 1\]
-      - DD evidence generation
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: accent, weight: 700, size: 14pt)[Pipeline Tests]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - DD cycle handling (Tarjan's SCC)
+        - DB in/out degree counting
+        - Self-dependency ignored
+        - Normalization edge cases (max = min)
+        - All 6 metrics present in output
+        - Composite score in \[0, 1\]
+        - DD evidence generation
+      ]
     ],
     [
-      *Parser tests:*
-      - 7 dependency extraction tests
-      - 6 FE detection tests
-      - Suffix, FQDN, hostname:port patterns
-      - Multi-document YAML
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: dd-c, weight: 700, size: 14pt)[Parser Tests]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - 7 dependency extraction tests
+        - 6 FE detection tests
+        - Suffix, FQDN, hostname:port patterns
+        - Multi-document YAML
+      ]
 
-      *Storage tests:*
-      - Round-trip for all 6 metric types
-      - Empty source path handling
+      #v(8pt)
 
-      *Git log tests:*
-      - 6 tests for log parsing
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: cdr-c, weight: 700, size: 14pt)[Storage & Git Tests]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - Round-trip for all 6 metric types
+        - 6 git log parsing tests
+      ]
     ]
   )
 
   #v(8pt)
-  #align(center)[
-    #box(fill: cdr-c.lighten(90%), radius: 6pt, inset: 10pt)[
-      #text(fill: cdr-c, weight: 600, size: 16pt)[All 29 tests pass · Build clean · Vet clean]
-    ]
-  ]
+  #callout(color: success)[All 29 tests pass -- Build clean -- Vet clean]
 ]
 
 // ─── 13. Project Structure ───
 #content-slide([Project Structure])[
-  #set text(size: 15pt)
+  #set text(size: 14pt)
   #grid(
     columns: (1fr, 1fr),
     column-gutter: 16pt,
     [
-      ```
-      ocm/
-      ├── cmd/ocm/main.go        # CLI entry
-      ├── internal/
-      │   ├── model/model.go     # Types
-      │   ├── parser/
-      │   │   ├── yamlscan.go    # K8s parser
-      │   │   └── parser_test.go
-      │   ├── pipeline/
-      │   │   ├── pipeline.go    # Orchestration
-      │   │   └── pipeline_test.go
-      │   ├── gitlog/
-      │   │   ├── gitlog.go      # CV metric
-      │   │   └── gitlog_test.go
-      ```
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: txt2)[
+          ```
+          ocm/
+          ├── cmd/ocm/main.go        # CLI entry
+          ├── internal/
+          │   ├── model/model.go     # Types
+          │   ├── parser/
+          │   │   ├── yamlscan.go    # K8s parser
+          │   │   └── parser_test.go
+          │   ├── pipeline/
+          │   │   ├── pipeline.go    # Orchestration
+          │   │   └── pipeline_test.go
+          │   ├── gitlog/
+          │   │   ├── gitlog.go      # CV metric
+          │   │   └── gitlog_test.go
+          ```
+        ]
+      ]
     ],
     [
-      ```
-      │   ├── storage/
-      │   │   ├── storage.go     # SQLite layer
-      │   │   └── storage_test.go
-      │   ├── api/api.go         # HTTP API
-      │   └── dashboard/
-      │       ├── dashboard.go   # go:embed
-      │       └── static/
-      │           ├── index.html
-      │           ├── styles.css
-      │           └── app.js
-      ├── specs/                  # 8 spec docs
-      ├── docs/                   # Phase docs
-      └── go.mod                  # 2 deps
-      ```
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: txt2)[
+          ```
+          │   ├── storage/
+          │   │   ├── storage.go     # SQLite layer
+          │   │   └── storage_test.go
+          │   ├── api/api.go         # HTTP API
+          │   └── dashboard/
+          │       ├── dashboard.go   # go:embed
+          │       └── static/
+          │           ├── index.html
+          │           ├── styles.css
+          │           └── app.js
+          ├── specs/                  # 8 spec docs
+          ├── docs/                   # Phase docs
+          └── go.mod                  # 2 deps
+          ```
+        ]
+      ]
     ]
   )
 ]
@@ -648,34 +826,40 @@
 // ─── 14. Phase Evolution ───
 #section-slide([Project Evolution])
 
-#content-slide([Phase 2 → Phase 3])[
-  #set text(size: 17pt)
+#content-slide([Phase 2 -> Phase 3])[
+  #set text(size: 16pt)
 
   #grid(
     columns: (1fr, 1fr),
     column-gutter: 20pt,
     [
-      *Phase 2 (MVP/PoC):*
-      - 2 metrics: CSA + DD only
-      - Basic dependency extraction
-      - Simple dashboard
-      - CSA evidence only
-      - Composite: 50/50 weights
-      - Manual validation
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: txt3, weight: 700, size: 15pt)[Phase 2 — MVP/PoC]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt3)
+        - 2 metrics: CSA + DD only
+        - Basic dependency extraction
+        - Simple dashboard
+        - CSA evidence only
+        - Composite: 50/50 weights
+        - Manual validation
+      ]
     ],
     [
-      *Phase 3 (Current):*
-      - All 6 metrics: CSA, DD, DB, CV, FE, CDR
-      - Broadened dependency detection (9 patterns)
-      - Git integration for CV
-      - FE + CDR detection rules
-      - Evidence for all 6 metrics
-      - Stripe-inspired dashboard redesign
-      - Repo-wide + service-specific views
-      - Radar, bar, trend, sparkline charts
-      - 29 automated tests
-      - `--cv-window` CLI flag
-      - Composite: equal 1/6 weights
+      #block(fill: accent.lighten(92%), radius: 8pt, inset: 14pt, width: 100%, stroke: 0.5pt + accent.lighten(70%))[
+        #text(fill: accent, weight: 700, size: 15pt)[Phase 3 — Current]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - All 6 metrics: CSA, DD, DB, CV, FE, CDR
+        - Broadened dependency detection (9 patterns)
+        - Git integration for CV
+        - FE + CDR detection rules
+        - Evidence for all 6 metrics
+        - Stripe-inspired dashboard redesign
+        - Radar, bar, trend, sparkline charts
+        - 29 automated tests
+        - `--cv-window` CLI flag
+      ]
     ]
   )
 ]
@@ -684,62 +868,84 @@
 #section-slide([Demo & Results])
 
 #content-slide([Running OCM])[
-  #set text(size: 17pt)
+  #set text(size: 16pt)
 
-  *Analyze a Kubernetes repository:*
+  #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+    #text(fill: accent, weight: 700, size: 14pt)[Analyze a Kubernetes repository]
+    #v(6pt)
+    #text(fill: txt2, size: 15pt)[
+      ```bash
+      # Build and run
+      go run ./cmd/ocm \
+        --repo /path/to/microservices-demo \
+        --db ocm.sqlite --port 8080
 
-  #v(8pt)
-  ```bash
-  # Build and run
-  go run ./cmd/ocm \
-    --repo /path/to/microservices-demo \
-    --db ocm.sqlite \
-    --port 8080
+      # Output
+      ocm: analyzed 12 services, db=ocm.sqlite
+      ocm: listening on http://127.0.0.1:8080
+      ```
+    ]
+  ]
 
-  # Output
-  ocm: analyzed 12 services, db=ocm.sqlite
-  ocm: listening on http://127.0.0.1:8080
-  ```
+  #v(10pt)
 
-  #v(8pt)
-  *JSON output mode (no server):*
-
-  ```bash
-  go run ./cmd/ocm --repo ./repo --print 2>/dev/null | jq '.services[].name'
-  ```
-
-  #v(8pt)
-  *Configure analysis:*
-
-  ```bash
-  --service-key manifest    # Use metadata.name instead of directory
-  --cv-window 60            # 60-day lookback for Change Volatility
-  ```
+  #grid(
+    columns: (1fr, 1fr),
+    column-gutter: 16pt,
+    block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+      #text(fill: cv-c, weight: 700, size: 14pt)[JSON output mode]
+      #v(4pt)
+      #text(fill: txt2, size: 14pt)[
+        ```bash
+        go run ./cmd/ocm --repo ./repo \
+          --print 2>/dev/null | jq '.'
+        ```
+      ]
+    ],
+    block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+      #text(fill: cdr-c, weight: 700, size: 14pt)[Configuration flags]
+      #v(4pt)
+      #text(fill: txt2, size: 14pt)[
+        ```bash
+        --service-key manifest  # metadata.name
+        --cv-window 60          # 60-day lookback
+        ```
+      ]
+    ],
+  )
 ]
 
 // ─── 16. Known Limitations ───
 #content-slide([Known Limitations])[
-  #set text(size: 17pt)
+  #set text(size: 16pt)
 
   #grid(
     columns: (1fr, 1fr),
     column-gutter: 20pt,
     [
-      *By design (prototype scope):*
-      - Heuristic-based extraction
-      - No Helm template rendering
-      - No Dockerfile parsing
-      - Single-run-on-startup model
-      - `git` binary required for CV
-      - Localhost only (no auth)
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: cv-c, weight: 700, size: 14pt)[By Design (Study project)]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - Heuristic-based extraction
+        - No Helm template rendering
+        - No Dockerfile parsing
+        - Single-run-on-startup model
+        - `git` binary required for CV
+        - Localhost only (no auth)
+      ]
     ],
     [
-      *Mitigation strategies:*
-      - Evidence trail enables manual verification
-      - Multiple service ID strategies
-      - Best-effort approach (warnings, not failures)
-      - Modular architecture enables extension
-      - Configurable weights for composite scoring
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: cdr-c, weight: 700, size: 14pt)[Mitigations]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - Evidence trail enables manual verification
+        - Multiple service ID strategies
+        - Best-effort approach (warnings, not failures)
+        - Modular architecture enables extension
+        - Configurable weights for composite scoring
+      ]
     ]
   )
 ]
@@ -748,46 +954,74 @@
 #section-slide([Future Work])
 
 #content-slide([Potential Extensions])[
-  #set text(size: 17pt)
+  #set text(size: 16pt)
 
   #grid(
     columns: (1fr, 1fr),
     column-gutter: 20pt,
     [
-      *Near-term:*
-      - Helm v3 template rendering
-      - Dockerfile complexity parsing
-      - Scheduled/on-demand re-analysis
-      - Configurable weights via UI
-      - Export reports (PDF/CSV)
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: accent, weight: 700, size: 14pt)[Near-Term]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - Helm v3 template rendering
+        - Dockerfile complexity parsing
+        - Scheduled/on-demand re-analysis
+        - Configurable weights via UI
+        - Export reports (PDF/CSV)
+      ]
     ],
     [
-      *Long-term:*
-      - CI/CD integration (PR complexity diffs)
-      - Multi-repo support
-      - Complexity budget enforcement
-      - Runtime metrics correlation
-      - Team/org-level dashboards
-      - Authentication & multi-user
+      #block(fill: raised, radius: 8pt, inset: 14pt, width: 100%)[
+        #text(fill: accent2, weight: 700, size: 14pt)[Long-Term]
+        #v(6pt)
+        #set text(size: 15pt, fill: txt2)
+        - CI/CD integration (PR complexity diffs)
+        - Multi-repo support
+        - Complexity budget enforcement
+        - Runtime metrics correlation
+        - Team/org-level dashboards
+        - Authentication & multi-user
+      ]
     ]
   )
 ]
 
 // ─── 18. Summary ───
 #content-slide([Summary])[
-  #set text(size: 18pt)
+  #set text(size: 17pt)
 
   #grid(
     columns: (auto, 1fr),
-    column-gutter: 12pt,
-    row-gutter: 12pt,
-    text(fill: accent, size: 20pt)[✓], [*6 metrics* quantifying operational complexity from K8s YAML],
-    text(fill: accent, size: 20pt)[✓], [*Single binary* — Go + embedded SQLite + embedded dashboard],
-    text(fill: accent, size: 20pt)[✓], [*Evidence-based* — every metric contribution is traceable],
-    text(fill: accent, size: 20pt)[✓], [*Graph algorithms* — Tarjan's SCC for cycle-safe dependency depth],
-    text(fill: accent, size: 20pt)[✓], [*Minimal dependencies* — only `yaml.v3` + pure-Go SQLite],
-    text(fill: accent, size: 20pt)[✓], [*Interactive dashboard* — repo overview, service drill-down, charts],
-    text(fill: accent, size: 20pt)[✓], [*29 automated tests* — parser, pipeline, storage, git log],
+    column-gutter: 14pt,
+    row-gutter: 14pt,
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*6 metrics* quantifying operational complexity from K8s YAML],
+
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*Single binary* — Go + embedded SQLite + embedded dashboard],
+
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*Evidence-based* — every metric contribution is traceable],
+
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*Graph algorithms* — Tarjan's SCC for cycle-safe dependency depth],
+
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*Minimal dependencies* — only `yaml.v3` + pure-Go SQLite],
+
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*Interactive dashboard* — repo overview, service drill-down, charts],
+
+    box(fill: success.lighten(85%), radius: 14pt, width: 28pt, height: 28pt,
+      align(center + horizon, text(fill: success, weight: 800, size: 16pt)[+])
+    ), align(horizon)[*29 automated tests* — parser, pipeline, storage, git log],
   )
 ]
 
@@ -797,14 +1031,14 @@
   #set text(fill: txt)
   #set align(horizon + center)
   #block(width: 100%)[
-    #text(size: 38pt, weight: 700)[Thank You]
+    #text(size: 44pt, weight: 800)[Thank You]
     #v(12pt)
-    #text(size: 18pt, fill: txt2)[Questions?]
-    #v(20pt)
-    #line(length: 80pt, stroke: 1.5pt + accent)
-    #v(16pt)
-    #text(size: 14pt, fill: txt3)[
-      Aabid Ali Sofi #h(8pt) | #h(8pt) 2023EBCS041 \
+    #text(size: 20pt, fill: txt2)[Questions?]
+    #v(24pt)
+    #line(length: 80pt, stroke: 2pt + accent)
+    #v(18pt)
+    #text(size: 14pt, fill: txt3, weight: 500)[
+      Aabid Ali Sofi #h(12pt) | #h(12pt) 2023EBCS041 \
       Operational Complexity Meter — Phase 3
     ]
   ]
