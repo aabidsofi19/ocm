@@ -15,3 +15,6 @@ tidy:
 
 build OUT="ocm":
   go build -o "{{OUT}}" ./cmd/ocm
+
+phase2-pdf:
+  typst compile docs/PHASE_2.typ specs/phase-2.pdf

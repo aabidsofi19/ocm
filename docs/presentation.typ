@@ -268,6 +268,62 @@
   )
 ]
 
+#content-slide([Metric Formulas])[
+  #set text(size: 15pt)
+  #grid(
+    columns: (1fr),
+    column-gutter: 16pt,
+    row-gutter: 12pt,
+    [
+      #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+        #metric-pill("CSA", csa-c)
+        #v(6pt)
+        $ "CSA"(s) = |"env"| + |"ports"| + |"resources"| + |"replicas"| + |"spec keys"| $
+      ]
+    ],
+    [
+      #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+        #metric-pill("DD", dd-c)
+        #v(6pt)
+        $ "DD"(s) = max_(p in "paths from" s) |p| quad "(edges in SCC-condensed DAG)" $
+      ]
+    ],
+    [
+      #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+        #metric-pill("DB", db-c)
+        #v(6pt)
+        $ "DB"(s) = "deg"^+(s) + "deg"^-(s) $
+      ]
+    ],
+    [
+      #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+        #metric-pill("CV", cv-c)
+        #v(6pt)
+        $ "CV"(s) = |{ c in "commits" : "touches"(c, s) and c in [t - Delta, t] }| $
+      ]
+    ],
+    [
+      #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+        #metric-pill("FE", fe-c)
+        #v(6pt)
+        $ "FE"(s) = |"LB ports"| + |"NP ports"| + |"Ingress paths"| + |"hostPorts"| + |"ext URLs"| $
+      ]
+    ],
+    [
+      #block(fill: raised, radius: 8pt, inset: 12pt, width: 100%)[
+        #metric-pill("CDR", cdr-c)
+        #v(6pt)
+        $ "CDR"(s) = sum_(f in "config files") (|"envs"(f)| - 1)^+ $
+      ]
+    ],
+  )
+
+  #v(6pt)
+  #text(size: 12pt, fill: txt3)[
+    $s$ = service, $"deg"^+$ = out-degree, $"deg"^-$ = in-degree, $Delta$ = lookback window (default 30 d), $(dot)^+$ = $max(dot, 0)$
+  ]
+]
+
 #content-slide([Composite OCM Score])[
   #set text(size: 18pt)
 
