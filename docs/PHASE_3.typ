@@ -2,38 +2,78 @@
 // Implementation Readiness & Validation
 
 
-#set page(margin: (top: 22mm, bottom: 22mm, left: 20mm, right: 20mm))
-#set text(size: 11pt)
+#set page(margin: (top: 25mm, bottom: 25mm, left: 25mm, right: 25mm))
+#set text(size: 11pt, font: "New Computer Modern")
 #set heading(numbering: "1.")
+#set par(justify: true, leading: 0.65em)
+#show heading.where(level: 1): it => {
+  v(8mm)
+  text(size: 14pt, weight: 700)[#it]
+  v(3mm)
+}
+#show heading.where(level: 2): it => {
+  v(5mm)
+  text(size: 12pt, weight: 700)[#it]
+  v(2mm)
+}
+
+// Page header/footer
+#set page(
+  header: context {
+    if counter(page).get().first() > 1 [
+      #set text(size: 9pt, fill: luma(120))
+      #h(1fr) Operational Complexity Meter — Phase 3
+    ]
+  },
+  footer: context {
+    set text(size: 9pt, fill: luma(120))
+    h(1fr)
+    counter(page).display("1")
+    h(1fr)
+  },
+)
 
 
 // =====================================================
 // Cover Page
 // =====================================================
 
+#v(20mm)
+
 #align(center)[
-  #text(size: 20pt, weight: 700)[Study Project – Phase 3 Document]
-  #text(size: 13pt)[(Implementation Readiness & Validation)]
+  #text(size: 22pt, weight: 700)[Study Project — Phase 3]
+  #v(2mm)
+  #text(size: 14pt, fill: luma(80))[(Implementation Readiness & Validation)]
 ]
 
-#v(16mm)
+#v(20mm)
 
-#text(weight: 700)[Cover Page]
+#align(center)[
+  #block(width: 75%, stroke: (top: 1pt + luma(180), bottom: 1pt + luma(180)), inset: (y: 12pt))[
+    #grid(
+      columns: (35%, 65%),
+      row-gutter: 8pt,
+      column-gutter: 8pt,
+      align: (right, left),
+      text(weight: 600)[Course Title:], [Study Project],
+      text(weight: 600)[Project Title:], [Operational Complexity Meter (OCM):\ Quantifying Operational Complexity in Distributed Systems],
+      text(weight: 600)[Group Number:], [1],
+      text(weight: 600)[Student Name:], [Aabid Ali Sofi],
+      text(weight: 600)[Student ID:], [2023EBCS041],
+      text(weight: 600)[Advisor:], [Preethy P Johny],
+      text(weight: 600)[Date of Submission:], [March 2, 2026],
+    )
+  ]
+]
 
-#v(4mm)
+#pagebreak()
 
-#grid(
-  columns: (38%, 62%),
-  row-gutter: 6pt,
-  column-gutter: 10pt,
-  [Course Title:], [Study Project],
-  [Project Title:], [Operational Complexity Meter (OCM): Quantifying Operational Complexity in Distributed Systems],
-  [Group Number:], [1],
-  [Student Name(s):], [Aabid Ali Sofi],
-  [Student ID(s):], [2023EBCS041],
-  [Project Advisor / Supervisor:], [Preethy P Johny],
-  [Date of Submission:], [March 2, 2026],
-)
+
+// =====================================================
+// Table of Contents
+// =====================================================
+
+#outline(title: [Table of Contents], indent: auto, depth: 2)
 
 #pagebreak()
 
@@ -48,11 +88,11 @@
 
 Phase 3 demonstrates that the Operational Complexity Meter (OCM) has reached full implementation readiness. The objectives of this phase are:
 
-- Demonstrating implementation readiness by delivering a feature-complete system that computes all six operational complexity metrics.
-- Validating design choices through automated testing, evidence traceability, and end-to-end pipeline verification.
-- Assessing system reliability, limitations, and future potential based on real-world testing against Kubernetes repositories.
++ Demonstrating implementation readiness by delivering a feature-complete system that computes all six operational complexity metrics.
++ Validating design choices through automated testing, evidence traceability, and end-to-end pipeline verification.
++ Assessing system reliability, limitations, and future potential based on real-world testing against Kubernetes repositories.
 
-== Summary of Work Completed So Far
+== Summary of Work Completed
 
 *Phase 1 — Problem Definition & Planning*
 
@@ -63,8 +103,8 @@ Phase 3 demonstrates that the Operational Complexity Meter (OCM) has reached ful
 *Phase 2 — Design & Proof of Concept*
 
 - Delivered a working PoC implementing two of six metrics (CSA and DD).
-- Established the end-to-end pipeline: YAML parsing → metric computation → SQLite persistence → REST API → web dashboard.
-- Defined the database schema, functional requirements (FR1–FR10), and modular package structure.
+- Established the end-to-end pipeline: YAML parsing, metric computation, SQLite persistence, REST API, and web dashboard.
+- Defined the database schema, functional requirements (FR1--FR10), and modular package structure.
 - Validated feasibility with a demo against a sample Kubernetes repository.
 
 
@@ -78,22 +118,22 @@ Phase 3 demonstrates that the Operational Complexity Meter (OCM) has reached ful
 
 All modules planned during Phase 2 have been *fully implemented*. The system is feature-complete with respect to the six-metric scope defined in Phase 1.
 
-#v(2mm)
-#text(weight: 700)[Fully Implemented Modules]
+#v(3mm)
 
 #table(
-  columns: (28%, 72%),
+  columns: (22%, 78%),
   stroke: 0.4pt + luma(180),
-  inset: 6pt,
+  inset: 7pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Module*], [*Description*],
   [`model`], [Metric types, default weights (equal 1/6 each), data structures for services, metric points, scores, evidence, and analysis results.],
-  [`parser`], [Kubernetes YAML parser — extracts CSA facts (env vars, ports, resources, replicas, spec keys), dependency relationships (7 suffix patterns, hostname:port regex, `.svc.cluster.local` FQDN), and Failure Exposure signals (5 detection rules). Handles Deployment, StatefulSet, DaemonSet, Job, CronJob, Service, and Ingress kinds.],
-  [`pipeline`], [Full orchestration — discovery, service identification (`dir`/`manifest` strategies), all six metric computations, min-max normalization, and weighted composite scoring.],
-  [`gitlog`], [Git history extraction for Change Volatility — parses `git log` output, filters by config file extensions, maps files to services, computes per-service commit counts within a configurable time window (default 30 days).],
-  [`storage`], [SQLite persistence — schema migration, transactional run saves (upsert services, insert metrics/scores/evidence), time-series queries, evidence retrieval.],
-  [`api`], [REST API — 6 endpoints for health, services, overview aggregates, score series, metric series, and evidence. CORS middleware for browser access.],
-  [`dashboard`], [Embedded web UI — `go:embed` static assets, Stripe-inspired dark theme, 4 canvas-based chart types, responsive layout, evidence modal.],
-  [`cmd/ocm`], [CLI entry point — 7 flags, orchestrates the full startup sequence (parse → analyze → persist → serve).],
+  [`parser`], [Kubernetes YAML parser — extracts CSA facts, dependency relationships (7 suffix patterns, hostname:port regex, `.svc.cluster.local` FQDN), and Failure Exposure signals (5 detection rules).],
+  [`pipeline`], [Full orchestration — discovery, service identification, all six metric computations, min-max normalization, and weighted composite scoring.],
+  [`gitlog`], [Git history extraction for Change Volatility — parses `git log` output, filters by config file extensions, maps files to services.],
+  [`storage`], [SQLite persistence — schema migration, transactional run saves, time-series queries, evidence retrieval.],
+  [`api`], [REST API — 6 endpoints for health, services, overview, score series, metric series, and evidence. CORS middleware.],
+  [`dashboard`], [Embedded web UI — `go:embed` static assets, Stripe-inspired dark theme, 4 canvas-based chart types, responsive layout.],
+  [`cmd/ocm`], [CLI entry point — 7 flags, orchestrates the full startup sequence.],
 )
 
 #v(2mm)
@@ -101,8 +141,6 @@ All modules planned during Phase 2 have been *fully implemented*. The system is 
 
 
 == Implemented Features
-
-The following features have been implemented end-to-end:
 
 *Core Metric Computation (6 metrics):*
 
@@ -115,9 +153,11 @@ The following features have been implemented end-to-end:
 
 *Composite Scoring:*
 
-- Min-max normalization per metric across the service cohort: $ "norm" = (v - min) / (max - min) $
-- When $max = min$, normalized value defaults to $0$.
-- Composite OCM score: $ "OCM" = sum_(m in M) w_m dot "norm"_m $ where $w_m = 1\/6$ for all six metrics.
+- Min-max normalization per metric across the service cohort:
+  $ "norm" = (v - min) / (max - min) $
+- When $max = min$, the normalized value defaults to $0$.
+- Composite OCM score:
+  $ "OCM" = sum_(m in M) w_m dot "norm"_m quad "where" w_m = 1\/6 $
 
 *Data Handling and Persistence:*
 
@@ -162,59 +202,62 @@ All tests use Go's standard `testing` package and can be run with `go test ./...
 
 The test suite consists of *32 test functions* across 4 packages.
 
-#v(2mm)
-#text(weight: 600)[Parser Tests (16 tests)]
+#v(3mm)
+*Parser Tests (16 tests)*
 
 #table(
-  columns: (36%, 32%, 18%, 14%),
+  columns: (34%, 32%, 18%, 16%),
   stroke: 0.4pt + luma(180),
   inset: 5pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Test*], [*Expected Behavior*], [*Observed*], [*Status*],
-  [FE: Service LoadBalancer], [2 ports → 2 exposed endpoints], [2 endpoints, 2 evidence items], [Pass],
-  [FE: Ingress], [2 rules, 3 paths → 3 endpoints], [3 exposed endpoints], [Pass],
-  [FE: ExternalName], [1 external integration], [component = `external_integration`], [Pass],
-  [FE: External URL], [Only external URLs counted], [1 external URL (internal skipped)], [Pass],
-  [FE: NodePort], [1 port → 1 endpoint], [1 exposed endpoint], [Pass],
+  [FE: Service LoadBalancer], [2 ports -> 2 exposed endpoints], [2 endpoints], [Pass],
+  [FE: Ingress], [2 rules, 3 paths -> 3 endpoints], [3 endpoints], [Pass],
+  [FE: ExternalName], [1 external integration], [1 integration], [Pass],
+  [FE: External URL], [Only external URLs counted], [1 external URL], [Pass],
+  [FE: NodePort], [1 port -> 1 endpoint], [1 endpoint], [Pass],
   [FE: ClusterIP], [No exposure], [0 endpoints], [Pass],
-  [Dep: Service suffix], [`DB_SERVICE=postgres` → dep], [[postgres, redis]], [Pass],
-  [Dep: Addr suffix], [Google Boutique pattern], [[cartservice, productcatalogservice]], [Pass],
+  [Dep: Service suffix], [`DB_SERVICE=postgres` -> dep], [[postgres, redis]], [Pass],
+  [Dep: Addr suffix], [Google Boutique pattern], [Correct deps], [Pass],
   [Dep: Host suffix], [`DB_HOST=postgres:5432`], [[postgres, redis]], [Pass],
-  [Dep: URL suffix], [`API_URL=http://api-gateway:8080`], [[api-gateway]], [Pass],
+  [Dep: URL suffix], [`API_URL=http://api:8080`], [[api-gateway]], [Pass],
   [Dep: Hostname:port], [Bare `mongo=user-db:27017`], [[user-db]], [Pass],
   [Dep: Cluster FQDN], [`.svc.cluster.local`], [[zipkin]], [Pass],
   [Dep: Plain strings], [No deps from plain values], [0 dependencies], [Pass],
-  [Dep: Numeric rejected], [Port numbers not deps], [1 dep (postgres only)], [Pass],
-  [Normalize: Numeric], [`"5432"` → `""`, `"redis"` → `"redis"`], [Correct filtering], [Pass],
-  [Dep: CronJob], [CronJob containers parsed], [[grafana, prometheus]], [Pass],
+  [Dep: Numeric rejected], [Port numbers not deps], [1 dep only], [Pass],
+  [Normalize: Numeric], [`"5432"` -> `""`, `"redis"` -> `"redis"`], [Correct], [Pass],
+  [Dep: CronJob], [CronJob containers parsed], [Correct deps], [Pass],
 )
 
-#v(2mm)
-#text(weight: 600)[Pipeline Tests (8 tests)]
+#v(3mm)
+*Pipeline Tests (8 tests)*
 
 #table(
-  columns: (36%, 32%, 18%, 14%),
+  columns: (34%, 32%, 18%, 16%),
   stroke: 0.4pt + luma(180),
   inset: 5pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Test*], [*Expected Behavior*], [*Observed*], [*Status*],
-  [DD: Cycle handling], [SCC condensation: a↔b cycle], [dd\[a\]=1, dd\[b\]=1, dd\[c\]=0], [Pass],
-  [Normalize: max=min], [Same values → 0], [Both normalize to 0], [Pass],
+  [DD: Cycle handling], [SCC condensation: a<->b cycle], [Correct DD values], [Pass],
+  [Normalize: max=min], [Same values -> 0], [Both normalize to 0], [Pass],
   [Pipeline: Run smoke], [Produces valid score], [Score in \[0,1\]], [Pass],
-  [DB: In/out degree], [a→\{b,c\}, b→\{c\}], [db\[a\]=2, db\[b\]=2, db\[c\]=2], [Pass],
+  [DB: In/out degree], [a->\{b,c\}, b->\{c\}], [Correct degrees], [Pass],
   [DB: No dependencies], [Isolated services], [db = 0 for both], [Pass],
-  [DB: Self-dep ignored], [a→\{a,b\}, self-dep skipped], [db\[a\]=1, db\[b\]=1], [Pass],
-  [All 6 metrics (integration)], [Temp repo with 2 services], [All metrics present, correct ranges], [Pass],
-  [All metrics in composite], [Manual data, full pipeline], [Normalized values in \[0,1\]], [Pass],
+  [DB: Self-dep ignored], [a->\{a,b\}, self-dep skipped], [Correct values], [Pass],
+  [All 6 metrics], [Temp repo with 2 services], [All present], [Pass],
+  [All metrics in composite], [Manual data, full pipeline], [Values in \[0,1\]], [Pass],
 )
 
-#v(2mm)
-#text(weight: 600)[Git Log Tests (6 tests)]
+#v(3mm)
+*Git Log Tests (6 tests)*
 
 #table(
-  columns: (36%, 32%, 18%, 14%),
+  columns: (34%, 32%, 18%, 16%),
   stroke: 0.4pt + luma(180),
   inset: 5pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Test*], [*Expected Behavior*], [*Observed*], [*Status*],
-  [Multiple commits], [2 commits parsed correctly], [Correct hashes, timestamps, files], [Pass],
+  [Multiple commits], [2 commits parsed correctly], [Correct], [Pass],
   [Empty output], [0 commits returned], [Empty slice], [Pass],
   [Single commit, no files], [1 commit, 0 files], [Correct], [Pass],
   [Malformed timestamp], [Hash parsed, time is zero], [Graceful degradation], [Pass],
@@ -222,22 +265,23 @@ The test suite consists of *32 test functions* across 4 packages.
   [Options defaults], [30-day window, extensions set], [Defaults applied], [Pass],
 )
 
-#v(2mm)
-#text(weight: 600)[Storage Tests (2 tests)]
+#v(3mm)
+*Storage Tests (2 tests)*
 
 #table(
-  columns: (36%, 32%, 18%, 14%),
+  columns: (34%, 32%, 18%, 16%),
   stroke: 0.4pt + luma(180),
   inset: 5pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Test*], [*Expected Behavior*], [*Observed*], [*Status*],
-  [Save/retrieve all metrics], [Round-trip for all 6 types], [All evidence items verified], [Pass],
-  [Empty source path], [DD/DB/CV/CDR evidence saves], [Successfully persisted], [Pass],
+  [Save/retrieve all metrics], [Round-trip for all 6 types], [All verified], [Pass],
+  [Empty source path], [DD/DB/CV/CDR evidence saves], [Persisted], [Pass],
 )
 
 
 == Validation Summary
 
-- *Requirements coverage:* All 10 functional requirements from Phase 2 (FR1–FR10) are satisfied. Additionally, four new metrics (DB, CV, FE, CDR) extend the system beyond the original MVP scope.
+- *Requirements coverage:* All 10 functional requirements from Phase 2 (FR1--FR10) are satisfied. Additionally, four new metrics (DB, CV, FE, CDR) extend the system beyond the original MVP scope.
 - *Evidence traceability:* Every metric value is backed by queryable evidence items that trace back to specific YAML files, manifest kinds, and configuration keys.
 - *Deviations:* No deviations from expected behavior. The system handles edge cases (cycles in dependency graphs, missing Git, numeric values, CronJob manifests) as designed.
 
@@ -248,29 +292,17 @@ The test suite consists of *32 test functions* across 4 packages.
 
 = Performance and Reliability Analysis
 
-*Responsiveness:*
-
-- Analysis of small-to-medium repositories (10–50 services) completes in under 5 seconds.
-- The Git log extraction (`git log --since=...`) adds a few seconds depending on repository history depth.
-- API responses and dashboard rendering are sub-second for typical workloads.
-
-*Stability:*
-
-- The system runs as a single Go binary with no background threads or goroutine leaks.
-- SQLite transactions ensure atomic writes — partial analysis runs are not persisted.
-- The HTTP server uses a 5-second `ReadHeaderTimeout` to prevent slow client attacks.
-- The dashboard handles API errors gracefully with status indicator dots (green/red).
-
-*Resource Usage:*
-
-- Memory footprint is minimal: YAML files are parsed one document at a time, and the dependency graph is built in-memory only for the current run.
-- SQLite database size grows linearly with the number of runs and services (~50KB per run for a 10-service repo).
-- The binary size is approximately 15MB (including embedded static assets and the pure-Go SQLite driver).
-
-*Performance Bottlenecks:*
-
-- The `git log` subprocess is the slowest component for repositories with extensive commit histories. The configurable `--cv-window` flag mitigates this by limiting the lookback window.
-- CDR environment detection relies on directory name heuristics, which may produce false positives for unconventional directory structures.
+#table(
+  columns: (22%, 78%),
+  stroke: 0.4pt + luma(180),
+  inset: 7pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
+  [*Aspect*], [*Details*],
+  [Responsiveness], [Analysis of small-to-medium repositories (10--50 services) completes in under 5 seconds. API responses and dashboard rendering are sub-second.],
+  [Stability], [Single Go binary with no goroutine leaks. SQLite transactions ensure atomic writes. HTTP server uses 5-second `ReadHeaderTimeout`.],
+  [Resource Usage], [Minimal memory footprint — YAML files parsed one document at a time. SQLite grows ~50KB per run for a 10-service repo. Binary size ~15MB.],
+  [Bottlenecks], [The `git log` subprocess is the slowest component for large histories. The `--cv-window` flag mitigates this. CDR directory heuristics may produce false positives for unconventional structures.],
+)
 
 
 // =====================================================
@@ -279,36 +311,36 @@ The test suite consists of *32 test functions* across 4 packages.
 
 = Risk Analysis and Mitigation Review
 
-== Identified Risks (Revisited)
-
-The following risks were identified during Phase 1 and Phase 2:
+== Identified Risks
 
 #table(
-  columns: (10%, 30%, 60%),
+  columns: (8%, 24%, 68%),
   stroke: 0.4pt + luma(180),
   inset: 6pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Risk*], [*Category*], [*Description*],
-  [R1], [Service identification ambiguity], [Different directory structures may yield inconsistent service names.],
-  [R2], [Dependency extraction uncertainty], [Heuristic-based dependency detection may miss or falsely identify dependencies.],
-  [R3], [Metric validity vs heuristics], [Metrics based on heuristics may not accurately reflect true operational complexity.],
+  [R1], [Service identification], [Different directory structures may yield inconsistent service names.],
+  [R2], [Dependency extraction], [Heuristic-based detection may miss or falsely identify dependencies.],
+  [R3], [Metric validity], [Heuristic-based metrics may not accurately reflect true complexity.],
   [R4], [Scope creep], [Expanding beyond the six-metric scope during implementation.],
-  [R5], [External tool dependency], [CV metric depends on Git being available in the environment.],
-  [R6], [Scalability for large repos], [Memory and time costs for repositories with hundreds of services.],
+  [R5], [External dependency], [CV metric depends on Git being available in the environment.],
+  [R6], [Scalability], [Memory and time costs for repositories with hundreds of services.],
 )
 
 == Mitigation Effectiveness
 
 #table(
-  columns: (10%, 45%, 25%, 20%),
+  columns: (8%, 42%, 22%, 18%),
   stroke: 0.4pt + luma(180),
   inset: 6pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Risk*], [*Mitigation Applied*], [*Effectiveness*], [*Status*],
-  [R1], [Two strategies (`dir` and `manifest`) configurable via `--service-key` flag.], [Effective], [Mitigated],
-  [R2], [Seven suffix patterns, hostname:port regex, FQDN detection, and CronJob support. 16 parser tests validate extraction.], [Effective], [Mitigated],
-  [R3], [Full evidence traceability — every metric value links to specific YAML keys, files, and manifests. Users can audit why a score is what it is.], [Effective], [Mitigated],
-  [R4], [Strict adherence to the six-metric model. No features added outside the defined scope.], [Fully effective], [Mitigated],
-  [R5], [Best-effort approach: if `git` is not in PATH, CV returns zero and the pipeline continues without error.], [Effective], [Mitigated],
-  [R6], [Sequential file processing avoids memory spikes. Not tested at extreme scale (500+ services).], [Partially effective], [Remaining],
+  [R1], [Two strategies (`dir` and `manifest`) configurable via `--service-key`.], [Effective], [Mitigated],
+  [R2], [Seven suffix patterns, hostname:port regex, FQDN detection, CronJob support. 16 parser tests.], [Effective], [Mitigated],
+  [R3], [Full evidence traceability — every metric value links to specific YAML keys and files.], [Effective], [Mitigated],
+  [R4], [Strict adherence to the six-metric model.], [Fully effective], [Mitigated],
+  [R5], [Best-effort: if `git` is not in PATH, CV returns zero and pipeline continues.], [Effective], [Mitigated],
+  [R6], [Sequential file processing avoids memory spikes. Not tested at extreme scale (500+).], [Partial], [Remaining],
 )
 
 
@@ -318,26 +350,33 @@ The following risks were identified during Phase 1 and Phase 2:
 
 = Limitations and Constraints
 
-*Current Limitations:*
+== Current Limitations
 
-- *No Helm support:* The parser operates on raw YAML files. Helm charts must be rendered (`helm template`) before analysis.
-- *Heuristic dependency detection:* Dependencies are inferred from environment variable names and values. Services communicating through mechanisms not reflected in YAML (e.g., service mesh sidecars, message queues configured externally) are not detected.
-- *Single-run model:* The analysis runs once on startup. There is no daemon mode, scheduled execution, or file-watching capability.
-- *Localhost only:* No authentication or authorization. The dashboard and API are intended for local use only.
-- *No multi-repo support:* Each run analyzes a single repository path. Cross-repository dependency analysis is not supported.
+#table(
+  columns: (25%, 75%),
+  stroke: 0.4pt + luma(180),
+  inset: 6pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
+  [*Limitation*], [*Details*],
+  [No Helm support], [The parser operates on raw YAML. Helm charts must be rendered (`helm template`) before analysis.],
+  [Heuristic detection], [Dependencies inferred from env var names/values. Mechanisms not reflected in YAML (service mesh, external MQs) are not detected.],
+  [Single-run model], [Analysis runs once on startup. No daemon mode, scheduled execution, or file-watching.],
+  [Localhost only], [No authentication or authorization. Dashboard and API intended for local use only.],
+  [No multi-repo], [Each run analyzes a single repository path.],
+)
 
-*Assumptions:*
+== Assumptions
 
 - Kubernetes manifests follow standard API conventions (Deployment, Service, Ingress, etc.).
 - Service names are stable and deterministic based on directory structure or manifest metadata.
 - Git history is available in the analyzed repository for CV metric computation.
 - Environment directories follow common naming conventions (dev, staging, prod, etc.).
 
-*Constraints:*
+== Constraints
 
 - *Time:* Study project timeline limited advanced features such as CI/CD integration and multi-user access.
-- *Technology:* Pure-Go SQLite driver (`modernc.org/sqlite`) trades some performance for zero CGO dependency, simplifying distribution.
-- *Scope:* Only Kubernetes YAML is supported as input. Docker Compose, Terraform, and other IaC formats are excluded.
+- *Technology:* Pure-Go SQLite driver trades some performance for zero CGO dependency.
+- *Scope:* Only Kubernetes YAML is supported. Docker Compose, Terraform, and other IaC formats are excluded.
 
 
 // =====================================================
@@ -346,31 +385,17 @@ The following risks were identified during Phase 1 and Phase 2:
 
 = Future Enhancements and Scope Extension
 
-*Feature Enhancements:*
-
-- *Helm chart support:* Integrate `helm template` rendering to analyze parameterized charts directly.
-- *Watch mode:* File-system watcher for continuous analysis as manifests change during development.
-- *Custom metric weights:* Allow users to configure per-metric weights via CLI flags or a configuration file.
-- *Multi-repository analysis:* Compare operational complexity across multiple repositories in a single dashboard.
-- *CI/CD integration:* Run OCM as a CI pipeline step and fail builds that exceed an OCM threshold.
-
-*Performance Optimizations:*
-
-- *Incremental analysis:* Detect changed files since the last run and recompute only affected services.
-- *Parallel parsing:* Use Go goroutines to parse YAML files concurrently for large repositories.
-- *Database compaction:* Prune old time-series data to prevent unbounded SQLite growth.
-
-*Scalability Improvements:*
-
-- *Remote database support:* Replace or supplement SQLite with PostgreSQL for team-wide deployments.
-- *Authentication:* Add token-based authentication for non-localhost usage.
-
-*Additional Use Cases:*
-
-- *Docker Compose and Terraform support:* Extend the parser to analyze other infrastructure-as-code formats.
-- *Alerting:* Notify teams when a service's OCM score crosses a defined threshold.
-- *Historical diff view:* Show metric changes between analysis runs in the dashboard.
-- *Export:* Generate PDF or CSV reports of analysis results.
+#table(
+  columns: (25%, 75%),
+  stroke: 0.4pt + luma(180),
+  inset: 6pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
+  [*Category*], [*Enhancements*],
+  [Feature], [Helm chart support, watch mode, custom metric weights via UI, multi-repository analysis, CI/CD integration with complexity thresholds.],
+  [Performance], [Incremental analysis (recompute only affected services), parallel YAML parsing with goroutines, database compaction for old time-series data.],
+  [Scalability], [Remote database support (PostgreSQL), token-based authentication for non-localhost usage.],
+  [Additional Use Cases], [Docker Compose and Terraform support, alerting on OCM threshold violations, historical diff view, PDF/CSV report export.],
+)
 
 
 // =====================================================
@@ -379,26 +404,26 @@ The following risks were identified during Phase 1 and Phase 2:
 
 = Learning Outcomes and Reflections
 
-*Technical Skills Gained:*
+== Technical Skills Gained
 
 - Designing and implementing a metrics engine with evidence traceability in Go.
 - Working with graph algorithms (Tarjan's SCC, DAG longest path) for real-world dependency analysis.
-- Building a complete application with embedded database, REST API, and web dashboard in a single binary — zero external runtime dependencies.
-- Implementing canvas-based data visualizations (radar chart, sparklines, trend lines) without third-party charting libraries.
-- Writing comprehensive tests for heuristic-based systems where edge cases are numerous and subtle.
+- Building a complete application with embedded database, REST API, and web dashboard in a single binary.
+- Implementing canvas-based data visualizations (radar chart, sparklines, trend lines) without third-party libraries.
+- Writing comprehensive tests for heuristic-based systems with numerous edge cases.
 
-*Design and Problem-Solving Insights:*
+== Design and Problem-Solving Insights
 
 - *Evidence-first design:* Attaching evidence to every metric value proved essential for user trust. A complexity score is meaningless without the ability to explain _why_ a service scored high.
-- *Heuristic boundaries:* Dependency detection heuristics are never perfect, but combining multiple detection strategies (suffix patterns, regex, FQDN) with transparent evidence makes the system useful despite imperfection.
-- *Min-max normalization trade-offs:* When all services have the same metric value, the normalized value defaults to 0. This is a deliberate design choice — a single-service repo should not appear "maximally complex" by default.
+- *Heuristic boundaries:* Dependency detection heuristics are imperfect, but combining multiple strategies with transparent evidence makes the system useful despite limitations.
+- *Min-max normalization:* When all services share the same metric value, the normalized value defaults to 0 — a deliberate choice to avoid a single-service repo appearing "maximally complex."
 
-*Challenges Faced and Lessons Learned:*
+== Challenges and Lessons Learned
 
-- *YAML parsing complexity:* Kubernetes manifests have significant structural variation across resource kinds (Deployment vs CronJob vs Ingress). Supporting all common kinds required careful recursive traversal.
-- *Cycle handling:* Circular dependencies in service graphs initially caused infinite loops during DD computation. Implementing Tarjan's SCC algorithm resolved this deterministically.
-- *Git integration:* Parsing `git log` output is fragile. The structured `--format` flag mitigates this, and the best-effort approach ensures the system remains functional without Git.
-- *Dashboard without frameworks:* Building responsive visualizations with vanilla Canvas and CSS required more effort than a framework-based approach but resulted in zero frontend build dependencies and a smaller bundle.
+- *YAML parsing:* Kubernetes manifests vary significantly across resource kinds. Supporting all common kinds required careful recursive traversal.
+- *Cycle handling:* Circular dependencies initially caused infinite loops during DD computation. Tarjan's SCC algorithm resolved this deterministically.
+- *Git integration:* Parsing `git log` output is fragile. Structured `--format` flags and best-effort approach ensure functionality without Git.
+- *Dashboard without frameworks:* Vanilla Canvas and CSS required more effort than a framework-based approach but resulted in zero frontend build dependencies.
 
 
 // =====================================================
@@ -408,20 +433,21 @@ The following risks were identified during Phase 1 and Phase 2:
 = Final Deliverables
 
 #table(
-  columns: (30%, 70%),
+  columns: (25%, 75%),
   stroke: 0.4pt + luma(180),
-  inset: 6pt,
+  inset: 7pt,
+  fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Deliverable*], [*Description*],
-  [Source Code], [Complete Go codebase — 12 source files (~3,800 lines) across 7 packages in the `internal/` and `cmd/` directories. Available at the project repository.],
-  [Compiled Binary], [`ocm` — single executable, no external dependencies required at runtime.],
-  [Automated Test Suite], [32 test functions covering parser, pipeline, git log, and storage modules. Run with `go test ./...`.],
-  [SQLite Database], [`ocm.sqlite` — analysis results persisted for time-series tracking.],
+  [Source Code], [Complete Go codebase — 12 source files (~3,800 lines) across 7 packages.],
+  [Compiled Binary], [`ocm` — single executable, no external runtime dependencies.],
+  [Test Suite], [32 test functions covering parser, pipeline, git log, and storage. Run with `go test ./...`.],
+  [SQLite Database], [`ocm.sqlite` — analysis results for time-series tracking.],
   [Web Dashboard], [Embedded interactive dashboard with overview, service detail, charts, and evidence drill-down.],
-  [REST API], [6 endpoints serving JSON data for services, metrics, scores, aggregates, and evidence.],
-  [Specification Documents], [8 specification files in `specs/` covering data sources, parser, metric engine, composite scoring, persistence, API, and dashboard.],
-  [Phase 2 Document], [Design and PoC document (`docs/PHASE_2.typ`).],
-  [Phase 3 Document], [This document (`docs/PHASE_3.typ`).],
-  [Presentation Slides], [Polylux/Typst presentation (`docs/presentation.typ`) with 19 slides covering the full system.],
+  [REST API], [6 endpoints serving JSON data for services, metrics, scores, and evidence.],
+  [Specifications], [8 specification files in `specs/` covering all system modules.],
+  [Phase Documents], [Phase 2 design document and this Phase 3 document.],
+  [Presentation], [Polylux/Typst presentation (`docs/presentation.pdf`).],
+  [Project Repository], [#link("https://github.com/aabidsofi19/ocm")[https://github.com/aabidsofi19/ocm]],
 )
 
 
@@ -446,12 +472,18 @@ The system is ready for evaluation and demonstration.
 
 = Supervisor Review and Approval
 
-Advisor Feedback:
+#v(5mm)
 
-Supervisor Comments:
-
-Recommendations:
-
-Signature:
-
-Date:
+#grid(
+  columns: (35%, 65%),
+  row-gutter: 16pt,
+  text(weight: 600)[Advisor Feedback:], line(length: 100%, stroke: 0.5pt + luma(200)),
+  [], [],
+  text(weight: 600)[Supervisor Comments:], line(length: 100%, stroke: 0.5pt + luma(200)),
+  [], [],
+  text(weight: 600)[Recommendations:], line(length: 100%, stroke: 0.5pt + luma(200)),
+  [], [],
+  text(weight: 600)[Signature:], line(length: 60%, stroke: 0.5pt + luma(200)),
+  [], [],
+  text(weight: 600)[Date:], line(length: 40%, stroke: 0.5pt + luma(200)),
+)
