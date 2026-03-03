@@ -4,7 +4,7 @@
 #import "@preview/polylux:0.4.0": *
 
 #set page(paper: "presentation-16-9", margin: (x: 28pt, top: 20pt, bottom: 24pt))
-#set text(size: 18pt, font: ("Inter", "Inter Variable"))
+#set text(size: 18pt, font: "Inter")
 
 // ─── Color palette ───
 #let bg      = rgb("#0c1017")

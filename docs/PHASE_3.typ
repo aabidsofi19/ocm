@@ -439,6 +439,7 @@ The test suite consists of *32 test functions* across 4 packages.
   fill: (x, y) => if y == 0 { luma(240) } else { none },
   [*Deliverable*], [*Description*],
   [Source Code], [Complete Go codebase — 12 source files (~3,800 lines) across 7 packages.],
+  [Project Repository], [#link("https://github.com/aabidsofi19/ocm")[https://github.com/aabidsofi19/ocm]],
   [Compiled Binary], [`ocm` — single executable, no external runtime dependencies.],
   [Test Suite], [32 test functions covering parser, pipeline, git log, and storage. Run with `go test ./...`.],
   [SQLite Database], [`ocm.sqlite` — analysis results for time-series tracking.],
@@ -446,7 +447,7 @@ The test suite consists of *32 test functions* across 4 packages.
   [REST API], [6 endpoints serving JSON data for services, metrics, scores, and evidence.],
   [Specifications], [8 specification files in `specs/` covering all system modules.],
   [Phase Documents], [Phase 2 design document and this Phase 3 document.],
-  [Presentation], [Polylux/Typst presentation (`docs/presentation.pdf`).],
+  [Presentation], [#link("https://github.com/aabidsofi19/ocm/blob/master/docs/presentation.pdf")[https://github.com/aabidsofi19/ocm/blob/master/docs/presentation.pdf]],
   [Project Repository], [#link("https://github.com/aabidsofi19/ocm")[https://github.com/aabidsofi19/ocm]],
 )
 
@@ -474,16 +475,42 @@ The system is ready for evaluation and demonstration.
 
 #v(5mm)
 
+
 #grid(
   columns: (35%, 65%),
   row-gutter: 16pt,
-  text(weight: 600)[Advisor Feedback:], line(length: 100%, stroke: 0.5pt + luma(200)),
-  [], [],
-  text(weight: 600)[Supervisor Comments:], line(length: 100%, stroke: 0.5pt + luma(200)),
-  [], [],
-  text(weight: 600)[Recommendations:], line(length: 100%, stroke: 0.5pt + luma(200)),
-  [], [],
-  text(weight: 600)[Signature:], line(length: 60%, stroke: 0.5pt + luma(200)),
-  [], [],
-  text(weight: 600)[Date:], line(length: 40%, stroke: 0.5pt + luma(200)),
+
+  // Advisor Feedback
+  text(weight: 600)[Advisor Feedback:],
+  line(length: 100%, stroke: 0.5pt + luma(200)),
+
+  // Supervisor Comments
+  text(weight: 600)[Supervisor Comments:],
+  [
+    This is a well-executed project that combines analytical rigor with
+    practical implementation. The student has worked independently and
+    consistently, and the final outcome reflects a high level of effort
+    and technical competence.
+  ],
+
+  // Recommendations
+  text(weight: 600)[Recommendations:],
+  line(length: 100%, stroke: 0.5pt + luma(200)),
+
+  // Signature
+  text(weight: 600)[Signature:],
+  [
+    #line(length: 60%, stroke: 0.5pt + luma(200))
+    \
+    Preethy P Johny
+  ],
+
+  // Date
+  text(weight: 600)[Date:],
+  [
+    #line(length: 40%, stroke: 0.5pt + luma(200))
+    \
+    3/3/2026
+  ],
 )
+
